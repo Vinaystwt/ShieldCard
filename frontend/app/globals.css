@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surfaces */
+  --color-base: #0A0A0C;
+  --color-panel: #0E0E11;
+  --color-surface: #15151A;
+  --color-raised: #1C1C23;
+  --color-hover: #242430;
+  --color-elevated: #2A2A36;
+
+  /* Copper accent — luminous, not muddy */
+  --color-copper: #C8833F;
+  --color-copper-dim: #8B5A28;
+  --color-copper-bright: #D99550;
+  --color-copper-muted: #7A5030;
+
+  /* Steel accent — cold, technical */
+  --color-steel: #6E90B2;
+  --color-steel-dim: #4D6D8E;
+  --color-steel-bright: #80A3C4;
+
+  /* Text */
+  --color-text: #F0EEE8;
+  --color-muted: #918F8A;
+  --color-subtle: #555350;
+  --color-ghost: #363430;
+
+  /* Status */
+  --color-pending: #C4943C;
+  --color-approved: #4D9170;
+  --color-denied: #934444;
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), 'Courier New', monospace;
+
+  /* Border radius */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-full: 9999px;
+}
+
+/* Semantic CSS variables (rgba / gradient values not covered by @theme) */
+:root {
+  --copper-glow: rgba(200, 131, 63, 0.12);
+  --copper-glow-strong: rgba(200, 131, 63, 0.20);
+  --copper-border: rgba(200, 131, 63, 0.26);
+  --copper-border-dim: rgba(200, 131, 63, 0.14);
+  --steel-glow: rgba(110, 144, 178, 0.09);
+  --steel-border: rgba(110, 144, 178, 0.20);
+  --border-dim: rgba(255, 255, 255, 0.065);
+  --border-mid: rgba(255, 255, 255, 0.10);
+  --border-bright: rgba(255, 255, 255, 0.16);
+  --pending-bg: rgba(196, 148, 60, 0.09);
+  --approved-bg: rgba(77, 145, 112, 0.09);
+  --denied-bg: rgba(147, 68, 68, 0.09);
+  --sealed-bg: rgba(122, 80, 48, 0.12);
+}
+
+/* Reset & base */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background-color: #0A0A0C;
+  color: #F5F4F0;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(200, 131, 63, 0.22);
+  color: #F5F4F0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #111114; }
+::-webkit-scrollbar-thumb { background: #28282F; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #363640; }
+
+/* Input focus ring override */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 1.5px solid #C8833F;
+  outline-offset: 2px;
+}
+
+/* Utility: copper-tinted panel border */
+.panel-copper {
+  border: 1px solid var(--copper-border-dim);
+}
+.panel-copper-bright {
+  border: 1px solid var(--copper-border);
+}
+
+/* Utility: steel-tinted panel border */
+.panel-steel {
+  border: 1px solid var(--steel-border);
+}
+
+/* Grid dot pattern for hero background */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Fine grid for app surfaces */
+.fine-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Hero glow */
+.hero-glow {
+  background: radial-gradient(ellipse 60% 40% at 70% 50%, rgba(200, 131, 63, 0.07) 0%, transparent 70%);
+}
+
+/* Gradient text utilities */
+.text-gradient-copper {
+  background: linear-gradient(135deg, #D99550 0%, #C8833F 50%, #B06B30 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-warm {
+  background: linear-gradient(135deg, #E8A866 0%, #C8833F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Draw path animation for SVG elements */
+@keyframes drawPath {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.8); opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes pending-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Scramble animation for encrypt transition */
+@keyframes scramble-fade {
+  0%   { opacity: 1; }
+  60%  { opacity: 0.3; }
+  100% { opacity: 0; }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pending {
+  animation: pending-pulse 2s ease-in-out infinite;
+}
+
+@keyframes scanLine {
+  0%   { transform: translateY(-80px); opacity: 0; }
+  10%  { opacity: 0.4; }
+  90%  { opacity: 0.4; }
+  100% { transform: translateY(80px); opacity: 0; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

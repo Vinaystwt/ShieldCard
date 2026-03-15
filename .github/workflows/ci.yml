@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  contract-test:
+    runs-on: ubuntu-latest
+    name: Solidity tests (mock CoFHE)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm compile
+      - run: pnpm test
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    name: Frontend build
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_SHIELDCARD_ADDRESS: "0x81Ed8596223EF768F8FbCDAd5Cc6535b12D25a9D"
+          NEXT_PUBLIC_SETTLEMENT_ADDRESS: "0x81c226460Aea0Bf9Eed7aE7Ba4deC8C8A6F23a09"
+          NEXT_PUBLIC_MOCKUSDC_ADDRESS:   "0x5d05BE0586DF41eCF920013f81ae04C2e7a724b5"
+          NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL: "https://sepolia-rollup.arbitrum.io/rpc"
+          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ""
+
+  frontend-lint:
+    runs-on: ubuntu-latest
+    name: Frontend lint
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
