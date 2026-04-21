@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { WordMark } from "@/components/brand/WordMark";
 import { RoleBadge } from "@/components/ui/RoleBadge";
+import { WalletButton } from "@/components/wallet/WalletButton";
 import { useRoleRouting } from "@/hooks/useRoleRouting";
 import { truncateAddress } from "@/lib/format";
 
@@ -67,12 +67,7 @@ export function TopBar() {
               </span>
             </div>
           )}
-          <ConnectButton
-            chainStatus="none"
-            showBalance={false}
-            label="Connect"
-            accountStatus="avatar"
-          />
+          <WalletButton label="Connect" />
         </div>
       </div>
     </header>

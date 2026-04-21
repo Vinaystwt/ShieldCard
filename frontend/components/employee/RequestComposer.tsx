@@ -1,18 +1,31 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Lock, AlertCircle, CheckCircle } from "lucide-react";
+
+import { TransactionStatus } from "@/hooks/useShieldCard";
 import { CATEGORY_OPTIONS } from "@/lib/constants";
-import { cn } from "@/lib/format";
+import { cn, getErrorMessage } from "@/lib/format";
 
 interface RequestComposerProps {
-  onSubmit: (input: { amount: number; category: number; memo: string }) => Promise<void>;
+  onSubmit: (
+    input: { amount: number; category: number; memo: string },
+    onStatusChange: (status: TransactionStatus) => void,
+  ) => Promise<void>;
   isBusy: boolean;
   isEmployee: boolean;
+  disabledReason?: string;
 }
 
-type Phase = "idle" | "scrambling" | "submitting" | "done" | "error";
+type Phase =
+  | "idle"
+  | "scrambling"
+  | "awaiting_wallet"
+  | "submitted"
+  | "confirming"
+  | "done"
+  | "error";
 
 const SCRAMBLE_CHARS = "0123456789ABCDEFabcdef";
 
@@ -28,11 +41,13 @@ function useScramble(value: string) {
         value
           .split("")
           .map((char) =>
-            char === "." || char === "" ? char
-              : elapsed > 500 ? char
-              : SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
+            char === "." || char === ""
+              ? char
+              : elapsed > 500
+                ? char
+                : SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)],
           )
-          .join("")
+          .join(""),
       );
       if (elapsed >= 600) {
         clearInterval(frameRef.current!);
@@ -49,7 +64,12 @@ function useScramble(value: string) {
   return { scrambled, start, reset };
 }
 
-export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestComposerProps) {
+export function RequestComposer({
+  onSubmit,
+  isBusy,
+  isEmployee,
+  disabledReason,
+}: RequestComposerProps) {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<number>(1);
   const [memo, setMemo] = useState("");
@@ -65,9 +85,15 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
     setErrorMsg("");
 
     startScramble(async () => {
-      setPhase("submitting");
       try {
-        await onSubmit({ amount: parseFloat(amount), category, memo });
+        await onSubmit(
+          { amount: parseFloat(amount), category, memo },
+          (status) => {
+            if (status.phase === "awaiting_wallet") setPhase("awaiting_wallet");
+            if (status.phase === "submitted") setPhase("submitted");
+            if (status.phase === "confirming") setPhase("confirming");
+          },
+        );
         setPhase("done");
         setAmount("");
         setMemo("");
@@ -75,16 +101,19 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
         setTimeout(() => setPhase("idle"), 3000);
       } catch (err: unknown) {
         setPhase("error");
-        setErrorMsg(err instanceof Error ? err.message : "Submission failed.");
+        setErrorMsg(getErrorMessage(err));
         resetScramble();
       }
     });
   }
 
   const isScrambling = phase === "scrambling";
-  const isSubmitting = phase === "submitting";
+  const isAwaitingWallet = phase === "awaiting_wallet";
+  const isSubmitted = phase === "submitted";
+  const isConfirming = phase === "confirming";
   const isDone = phase === "done";
-  const isInProgress = isScrambling || isSubmitting;
+  const isInProgress =
+    isScrambling || isAwaitingWallet || isSubmitted || isConfirming;
 
   return (
     <motion.div
@@ -97,15 +126,18 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
         border: "1px solid var(--border-mid)",
       }}
     >
-      <div className="flex items-center gap-2 mb-5">
+      <div className="mb-5 flex items-center gap-2">
         <div
-          className="w-7 h-7 rounded-md flex items-center justify-center"
-          style={{ background: "rgba(200,131,63,0.08)", border: "1px solid var(--copper-border-dim)" }}
+          className="flex h-7 w-7 items-center justify-center rounded-md"
+          style={{
+            background: "rgba(200,131,63,0.08)",
+            border: "1px solid var(--copper-border-dim)",
+          }}
         >
-          <Send className="w-3.5 h-3.5 text-copper" />
+          <Send className="h-3.5 w-3.5 text-copper" />
         </div>
         <div>
-          <h3 className="text-[14px] font-semibold text-text tracking-[-0.01em]">
+          <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-text">
             New encrypted request
           </h3>
           <p className="text-[11px] text-subtle">Encrypted locally before submission</p>
@@ -113,13 +145,14 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Amount */}
         <div>
-          <label className="block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle mb-1.5">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle">
             Amount (USD)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle text-[14px]">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-subtle">
+              $
+            </span>
             <motion.input
               type={isScrambling ? "text" : "number"}
               value={isScrambling ? scrambled : amount}
@@ -131,7 +164,7 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
               readOnly={isInProgress || isDone}
               className={cn(
                 "w-full rounded-md px-3 py-2.5 pl-7 text-[14px] font-mono transition-all duration-200",
-                isScrambling ? "text-copper tracking-wider" : "text-text"
+                isScrambling ? "tracking-wider text-copper" : "text-text",
               )}
               style={{
                 background: "var(--color-raised)",
@@ -149,21 +182,20 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
                   exit={{ opacity: 0 }}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                 >
-                  <Lock className="w-3.5 h-3.5 text-copper opacity-70" />
+                  <Lock className="h-3.5 w-3.5 text-copper opacity-70" />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Category */}
         <div>
-          <label className="block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle mb-1.5">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle">
             Category
           </label>
           <select
             value={category}
-            onChange={(e) => setCategory(parseInt(e.target.value))}
+            onChange={(e) => setCategory(parseInt(e.target.value, 10))}
             disabled={isInProgress || isDone}
             className="w-full rounded-md px-3 py-2.5 text-[14px] text-text"
             style={{
@@ -181,9 +213,8 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
           </select>
         </div>
 
-        {/* Memo */}
         <div>
-          <label className="block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle mb-1.5">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle">
             Memo
           </label>
           <input
@@ -203,29 +234,28 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
           />
         </div>
 
-        {/* Submit button */}
         <motion.button
           type="submit"
           disabled={isBusy || isInProgress || isDone || !amount || !memo}
           whileTap={{ scale: 0.97 }}
           className={cn(
-            "w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-[13px] font-medium transition-all duration-200",
+            "flex w-full items-center justify-center gap-2 rounded-md px-4 py-2.5 text-[13px] font-medium transition-all duration-200",
             isDone
               ? "text-approved"
               : isInProgress
-              ? "text-muted"
-              : isBusy || !amount || !memo
-              ? "text-subtle opacity-50 cursor-not-allowed"
-              : "text-text"
+                ? "text-muted"
+                : isBusy || !amount || !memo
+                  ? "cursor-not-allowed text-subtle opacity-50"
+                  : "text-text",
           )}
           style={{
             background: isDone
               ? "var(--approved-bg)"
               : isInProgress
-              ? "rgba(255,255,255,0.04)"
-              : isBusy
-              ? "rgba(255,255,255,0.03)"
-              : "linear-gradient(135deg, #C8833F 0%, #B06B30 100%)",
+                ? "rgba(255,255,255,0.04)"
+                : isBusy
+                  ? "rgba(255,255,255,0.03)"
+                  : "linear-gradient(135deg, #C8833F 0%, #B06B30 100%)",
             border: isDone
               ? "1px solid rgba(77,145,112,0.25)"
               : "1px solid transparent",
@@ -237,28 +267,37 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
         >
           {isDone ? (
             <>
-              <CheckCircle className="w-4 h-4" />
+              <CheckCircle className="h-4 w-4" />
               Submitted successfully
             </>
-          ) : isSubmitting ? (
+          ) : isAwaitingWallet ? (
             <>
-              <span className="w-3 h-3 rounded-full bg-muted animate-pending shrink-0" />
-              Submitting to Arbitrum Sepolia...
+              <span className="h-3 w-3 shrink-0 rounded-full bg-muted animate-pending" />
+              Open MetaMask to continue...
+            </>
+          ) : isSubmitted ? (
+            <>
+              <span className="h-3 w-3 shrink-0 rounded-full bg-muted animate-pending" />
+              Transaction submitted. Waiting for confirmation...
+            </>
+          ) : isConfirming ? (
+            <>
+              <span className="h-3 w-3 shrink-0 rounded-full bg-muted animate-pending" />
+              Confirming on Arbitrum Sepolia...
             </>
           ) : isScrambling ? (
             <>
-              <Lock className="w-4 h-4" />
+              <Lock className="h-4 w-4" />
               Encrypting locally...
             </>
           ) : (
             <>
-              <Lock className="w-4 h-4" />
+              <Lock className="h-4 w-4" />
               Encrypt & Submit
             </>
           )}
         </motion.button>
 
-        {/* Error state */}
         <AnimatePresence>
           {phase === "error" && errorMsg && (
             <motion.div
@@ -266,21 +305,38 @@ export function RequestComposer({ onSubmit, isBusy, isEmployee }: RequestCompose
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               className="flex items-start gap-2.5 rounded-md px-3.5 py-3 text-[12px] text-denied"
-              style={{ background: "var(--denied-bg)", border: "1px solid rgba(147,68,68,0.20)" }}
+              style={{
+                background: "var(--denied-bg)",
+                border: "1px solid rgba(147,68,68,0.20)",
+              }}
             >
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{errorMsg}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Not registered state */}
         {!isEmployee && (
           <div
             className="rounded-md px-3.5 py-3 text-[12px] text-muted"
-            style={{ background: "var(--border-dim)", border: "1px solid var(--border-dim)" }}
+            style={{
+              background: "var(--border-dim)",
+              border: "1px solid var(--border-dim)",
+            }}
           >
             This wallet is not registered as an employee. Ask the admin to register your address.
+          </div>
+        )}
+        {isEmployee && disabledReason && !isInProgress && !isDone && (
+          <div
+            className="rounded-md px-3.5 py-3 text-[12px]"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid var(--border-dim)",
+              color: "var(--color-muted)",
+            }}
+          >
+            {disabledReason}
           </div>
         )}
       </form>

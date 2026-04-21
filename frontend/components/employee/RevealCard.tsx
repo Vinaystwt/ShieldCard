@@ -11,17 +11,26 @@ interface RevealCardProps {
   encStatus: string;
   memo: string;
   onDecrypt: (requestId: bigint, encStatus: string) => Promise<number>;
+  canReveal: boolean;
+  isPublished: boolean;
 }
 
 type Phase = "sealed" | "unlocking" | "revealed";
 
-export function RevealCard({ requestId, encStatus, memo, onDecrypt }: RevealCardProps) {
+export function RevealCard({
+  requestId,
+  encStatus,
+  memo,
+  onDecrypt,
+  canReveal,
+  isPublished,
+}: RevealCardProps) {
   const [phase, setPhase] = useState<Phase>("sealed");
   const [result, setResult] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   async function handleReveal() {
-    if (phase !== "sealed") return;
+    if (phase !== "sealed" || !canReveal) return;
     setPhase("unlocking");
     setError("");
     try {
@@ -134,20 +143,25 @@ export function RevealCard({ requestId, encStatus, memo, onDecrypt }: RevealCard
               >
                 <Lock className="w-3.5 h-3.5 text-copper opacity-60 shrink-0" />
                 <span className="text-[12px] font-mono text-muted">
-                  Result sealed — permit required to reveal
+                  {isPublished
+                    ? "Result sealed on-chain and locally — permit required to reveal"
+                    : "Result available privately before publication — permit required to reveal"}
                 </span>
               </div>
 
               <button
                 onClick={handleReveal}
+                disabled={!canReveal}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-[13px] font-medium text-text transition-all duration-150 hover:brightness-110 active:scale-[0.97]"
                 style={{
-                  background: "rgba(200,131,63,0.08)",
-                  border: "1px solid var(--copper-border-dim)",
+                  background: canReveal ? "rgba(200,131,63,0.08)" : "rgba(255,255,255,0.04)",
+                  border: canReveal
+                    ? "1px solid var(--copper-border-dim)"
+                    : "1px solid var(--border-dim)",
                 }}
               >
                 <Unlock className="w-3.5 h-3.5 text-copper" />
-                Reveal with permit
+                {canReveal ? "Reveal with permit" : "Wallet/network required"}
               </button>
             </motion.div>
           )}
@@ -222,7 +236,9 @@ export function RevealCard({ requestId, encStatus, memo, onDecrypt }: RevealCard
                 </p>
               </div>
               <p className="text-[11px] text-subtle text-center">
-                This result was decrypted locally using your permit. Nothing was published on-chain.
+                {isPublished
+                  ? "This result was decrypted locally using your permit and also published to the public audit trail."
+                  : "This result was decrypted locally using your permit before any admin publication."}
               </p>
             </motion.div>
           )}

@@ -5,12 +5,16 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, RefreshCw } from "lucide-react";
+import { useChainId } from "wagmi";
 import { TopBar } from "@/components/shell/TopBar";
 import { RequestStream } from "@/components/admin/RequestStream";
 import { EmployeeManagement } from "@/components/admin/EmployeeManagement";
+import { SwitchNetworkButton } from "@/components/ui/SwitchNetworkButton";
 import { useCofhe } from "@/hooks/useCofhe";
 import { useRoleRouting } from "@/hooks/useRoleRouting";
 import { useShieldCard } from "@/hooks/useShieldCard";
+import { targetChain } from "@/lib/contracts";
+import { getErrorMessage } from "@/lib/format";
 
 export default function AdminPage() {
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -23,16 +27,42 @@ export default function AdminPage() {
     publishResult,
     summary,
   } = useShieldCard();
-  const { decryptForPublish, encryptAmount } = useCofhe();
+  const { decryptForPublish, encryptAmount, error, isReady } = useCofhe();
   const { isAdmin } = useRoleRouting();
+  const chainId = useChainId();
+  const isWrongNetwork = chainId !== targetChain.id;
+  const canRegister = isAdmin && isConfigured && !isWrongNetwork;
+  const canUseCofheActions = canRegister && isReady;
+  const adminDisabledReason = !isConfigured
+    ? "Configure NEXT_PUBLIC_SHIELDCARD_ADDRESS to enable admin actions."
+    : !isAdmin
+      ? "Connect the deployed admin wallet to manage employees."
+      : isWrongNetwork
+        ? "Switch the wallet to Arbitrum Sepolia before using admin actions."
+        : undefined;
+  const cofheDisabledReason = adminDisabledReason
+    ? adminDisabledReason
+    : !isReady
+      ? error
+        ? getErrorMessage(error)
+        : "CoFHE admin client is still initializing."
+      : undefined;
 
-  async function handlePublish(requestId: bigint, statusHandle: string) {
+  async function handlePublish(
+    requestId: bigint,
+    statusHandle: string,
+    onStatusChange: Parameters<typeof publishResult>[3],
+  ) {
     setPublishingId(requestId.toString());
     setPublishError("");
     try {
       const result = await decryptForPublish(statusHandle);
-      await publishResult(requestId, Number(result.decryptedValue), result.signature as `0x${string}`);
-      await requestsQuery.refetch();
+      await publishResult(
+        requestId,
+        Number(result.decryptedValue),
+        result.signature as `0x${string}`,
+        onStatusChange,
+      );
     } catch (err: unknown) {
       setPublishError(err instanceof Error ? err.message : "Publish failed.");
     } finally {
@@ -40,14 +70,20 @@ export default function AdminPage() {
     }
   }
 
-  async function handleRegister(employee: `0x${string}`) {
-    await registerEmployee(employee);
-    await requestsQuery.refetch();
+  async function handleRegister(
+    employee: `0x${string}`,
+    onStatusChange: Parameters<typeof registerEmployee>[1],
+  ) {
+    await registerEmployee(employee, onStatusChange);
   }
 
-  async function handleSetLimit(employee: `0x${string}`, amountUsd: number) {
+  async function handleSetLimit(
+    employee: `0x${string}`,
+    amountUsd: number,
+    onStatusChange: Parameters<typeof setEmployeeLimit>[2],
+  ) {
     const encLimit = await encryptAmount(Math.round(amountUsd * 100));
-    await setEmployeeLimit(employee, encLimit);
+    await setEmployeeLimit(employee, encLimit, onStatusChange);
   }
 
   const metrics = [
@@ -201,6 +237,39 @@ export default function AdminPage() {
           </motion.div>
         )}
 
+        {isConfigured && isAdmin && isWrongNetwork && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-6 rounded-lg px-4 py-3 text-[13px]"
+            style={{
+              background: "var(--pending-bg)",
+              border: "1px solid rgba(196,148,60,0.20)",
+              color: "var(--color-pending)",
+            }}
+          >
+            Wrong network connected. Switch the admin wallet to Arbitrum Sepolia before registering employees, setting limits, or publishing results.
+            <div className="mt-3">
+              <SwitchNetworkButton compact />
+            </div>
+          </motion.div>
+        )}
+
+        {isConfigured && isAdmin && !isWrongNetwork && !isReady && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-6 rounded-lg px-4 py-3 text-[13px]"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid var(--border-dim)",
+              color: "var(--color-muted)",
+            }}
+          >
+            {error ? getErrorMessage(error) : "Initializing CoFHE client for encrypted admin actions..."}
+          </motion.div>
+        )}
+
         {/* Employee management */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -211,7 +280,10 @@ export default function AdminPage() {
           <EmployeeManagement
             onRegister={handleRegister}
             onSetLimit={handleSetLimit}
-            isBusy={!isAdmin || !isConfigured}
+            canRegister={canRegister}
+            canSetLimit={canUseCofheActions}
+            registerDisabledReason={adminDisabledReason}
+            limitDisabledReason={cofheDisabledReason}
           />
         </motion.div>
 
@@ -273,6 +345,7 @@ export default function AdminPage() {
                 requests={requestsQuery.data ?? []}
                 onPublish={handlePublish}
                 publishingId={publishingId}
+                canPublish={canUseCofheActions}
               />
             </>
           )}

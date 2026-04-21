@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Upload, Loader2, CheckCircle } from "lucide-react";
+
+import { TransactionStatus } from "@/hooks/useShieldCard";
 import { SealedValue } from "@/components/ui/SealedValue";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -11,12 +13,23 @@ import type { RequestView } from "@/lib/contracts";
 
 interface RequestStreamProps {
   requests: Array<{ id: bigint } & RequestView>;
-  onPublish: (requestId: bigint, statusHandle: string) => Promise<void>;
+  onPublish: (
+    requestId: bigint,
+    statusHandle: string,
+    onStatusChange: (status: TransactionStatus) => void,
+  ) => Promise<void>;
   publishingId: string | null;
+  canPublish: boolean;
 }
 
-export function RequestStream({ requests, onPublish, publishingId }: RequestStreamProps) {
+export function RequestStream({
+  requests,
+  onPublish,
+  publishingId,
+  canPublish,
+}: RequestStreamProps) {
   const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set());
+  const [publishMessage, setPublishMessage] = useState<Record<string, string>>({});
 
   if (requests.length === 0) {
     return (
@@ -30,10 +43,24 @@ export function RequestStream({ requests, onPublish, publishingId }: RequestStre
 
   async function handlePublish(req: { id: bigint } & RequestView) {
     try {
-      await onPublish(req.id, req.encStatus);
+      await onPublish(req.id, req.encStatus, (status) => {
+        const key = req.id.toString();
+        if (status.phase === "awaiting_wallet") {
+          setPublishMessage((prev) => ({
+            ...prev,
+            [key]: "Approve the decrypt + publish transaction in MetaMask.",
+          }));
+        }
+        if (status.phase === "submitted" || status.phase === "confirming") {
+          setPublishMessage((prev) => ({
+            ...prev,
+            [key]: "Publish submitted. Waiting for Arbitrum Sepolia confirmation.",
+          }));
+        }
+      });
       setPublishedIds((prev) => new Set([...prev, req.id.toString()]));
     } catch {
-      // error handled by parent
+      // parent owns the actual error state
     }
   }
 
@@ -45,7 +72,7 @@ export function RequestStream({ requests, onPublish, publishingId }: RequestStre
             {["#", "Employee", "Sealed Amount", "Memo", "Time", "Status", "Action"].map((col) => (
               <th
                 key={col}
-                className="text-left text-[11px] font-medium uppercase tracking-[0.07em] text-subtle pb-3 pr-4 last:pr-0"
+                className="pb-3 pr-4 text-left text-[11px] font-medium uppercase tracking-[0.07em] text-subtle last:pr-0"
               >
                 {col}
               </th>
@@ -55,7 +82,8 @@ export function RequestStream({ requests, onPublish, publishingId }: RequestStre
         <tbody>
           {requests.map((req, i) => {
             const isPublishing = publishingId === req.id.toString();
-            const wasJustPublished = publishedIds.has(req.id.toString());
+            const publishHint = publishMessage[req.id.toString()];
+
             return (
               <motion.tr
                 key={req.id.toString()}
@@ -74,10 +102,12 @@ export function RequestStream({ requests, onPublish, publishingId }: RequestStre
                   <SealedValue handle={req.encAmount} />
                 </td>
                 <td className="py-3.5 pr-4">
-                  <span className="text-muted max-w-[160px] block truncate">{req.memo}</span>
+                  <span className="block max-w-[160px] truncate text-muted">{req.memo}</span>
                 </td>
                 <td className="py-3.5 pr-4">
-                  <span className="text-subtle whitespace-nowrap">{formatTimestamp(req.timestamp)}</span>
+                  <span className="whitespace-nowrap text-subtle">
+                    {formatTimestamp(req.timestamp)}
+                  </span>
                 </td>
                 <td className="py-3.5 pr-4">
                   <StatusBadge status={req.publicStatus} published={req.resultPublished} />
@@ -85,7 +115,7 @@ export function RequestStream({ requests, onPublish, publishingId }: RequestStre
                 <td className="py-3.5">
                   {req.resultPublished ? (
                     <span className="flex items-center gap-1.5 text-[11px] text-approved opacity-70">
-                      <CheckCircle className="w-3.5 h-3.5" />
+                      <CheckCircle className="h-3.5 w-3.5" />
                       Published
                     </span>
                   ) : (
@@ -96,10 +126,15 @@ export function RequestStream({ requests, onPublish, publishingId }: RequestStre
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="flex items-center gap-1.5 text-[11px] text-copper"
+                          className="flex flex-col items-start gap-1 text-[11px] text-copper"
                         >
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span className="animate-pending">Decrypting...</span>
+                          <span className="flex items-center gap-1.5">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <span className="animate-pending">Publishing...</span>
+                          </span>
+                          {publishHint && (
+                            <span style={{ color: "var(--color-subtle)" }}>{publishHint}</span>
+                          )}
                         </motion.span>
                       ) : (
                         <motion.button
@@ -108,15 +143,19 @@ export function RequestStream({ requests, onPublish, publishingId }: RequestStre
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           onClick={() => handlePublish(req)}
-                          disabled={!!publishingId}
-                          className="flex items-center gap-1.5 text-[12px] font-medium text-copper px-3 py-1.5 rounded-md transition-all duration-150 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                          disabled={!!publishingId || !canPublish}
+                          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium text-copper transition-all duration-150 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
                           style={{
-                            background: "rgba(200,131,63,0.08)",
-                            border: "1px solid var(--copper-border-dim)",
+                            background: canPublish
+                              ? "rgba(200,131,63,0.08)"
+                              : "rgba(255,255,255,0.04)",
+                            border: canPublish
+                              ? "1px solid var(--copper-border-dim)"
+                              : "1px solid var(--border-dim)",
                           }}
                         >
-                          <Upload className="w-3 h-3" />
-                          Publish
+                          <Upload className="h-3 w-3" />
+                          {canPublish ? "Publish" : "Wallet/network required"}
                         </motion.button>
                       )}
                     </AnimatePresence>

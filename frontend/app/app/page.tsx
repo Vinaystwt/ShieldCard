@@ -6,12 +6,12 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Shield, Users, Eye } from "lucide-react";
 import { TopBar } from "@/components/shell/TopBar";
 import { WordMark } from "@/components/brand/WordMark";
 import { RoleBadge } from "@/components/ui/RoleBadge";
+import { WalletButton } from "@/components/wallet/WalletButton";
 import { useRoleRouting } from "@/hooks/useRoleRouting";
 import { useShieldCard } from "@/hooks/useShieldCard";
 
@@ -78,7 +78,7 @@ export default function AppGatewayPage() {
 
           {/* Wallet connect */}
           <div className="mb-10 flex justify-center">
-            <ConnectButton label="Connect Wallet" chainStatus="icon" showBalance={false} />
+            <WalletButton label="Connect Wallet" />
           </div>
 
           {/* Role detection result */}

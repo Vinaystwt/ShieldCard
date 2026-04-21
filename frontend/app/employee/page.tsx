@@ -2,30 +2,47 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, RefreshCw } from "lucide-react";
+import { useChainId } from "wagmi";
 import { TopBar } from "@/components/shell/TopBar";
 import { RequestComposer } from "@/components/employee/RequestComposer";
 import { RequestHistory } from "@/components/employee/RequestHistory";
+import { SwitchNetworkButton } from "@/components/ui/SwitchNetworkButton";
 import { useCofhe } from "@/hooks/useCofhe";
 import { useRoleRouting } from "@/hooks/useRoleRouting";
 import { useShieldCard } from "@/hooks/useShieldCard";
+import { targetChain } from "@/lib/contracts";
+import { getErrorMessage } from "@/lib/format";
 
 export default function EmployeePage() {
   const { isConfigured, employeeRequestsQuery, submitRequest } = useShieldCard();
   const { isEmployee } = useRoleRouting();
-  const { decryptStatus, encryptAmount, encryptCategory, isReady } = useCofhe();
+  const { decryptStatus, encryptAmount, encryptCategory, error, isReady } = useCofhe();
+  const chainId = useChainId();
   const requests = employeeRequestsQuery.data ?? [];
+  const isWrongNetwork = chainId !== targetChain.id;
+  const canSubmit = isConfigured && isEmployee && isReady && !isWrongNetwork;
+  const submitDisabledReason = !isConfigured
+    ? "Configure NEXT_PUBLIC_SHIELDCARD_ADDRESS to enable live submissions."
+    : !isEmployee
+      ? "This wallet must be registered as an employee before it can submit requests."
+      : isWrongNetwork
+        ? "Switch your wallet to Arbitrum Sepolia before submitting."
+        : !isReady
+          ? error
+            ? getErrorMessage(error)
+            : "CoFHE encryption is still initializing."
+          : undefined;
 
-  async function handleSubmit(input: { amount: number; category: number; memo: string }) {
+  async function handleSubmit(
+    input: { amount: number; category: number; memo: string },
+    onStatusChange: Parameters<typeof submitRequest>[3],
+  ) {
     const cents = Math.round(input.amount * 100);
-    const [encAmount, encCategory] = await Promise.all([
-      encryptAmount(cents),
-      encryptCategory(input.category),
-    ]);
-    await submitRequest(encAmount, encCategory, input.memo);
-    await employeeRequestsQuery.refetch();
+    const encAmount = await encryptAmount(cents);
+    const encCategory = await encryptCategory(input.category);
+    await submitRequest(encAmount, encCategory, input.memo, onStatusChange);
   }
 
   async function handleDecrypt(requestId: bigint, encStatus: string): Promise<number> {
@@ -114,7 +131,25 @@ export default function EmployeePage() {
           </motion.div>
         )}
 
-        {isConfigured && isEmployee && !isReady && (
+        {isConfigured && isEmployee && isWrongNetwork && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-lg px-4 py-3 text-[13px]"
+            style={{
+              background: "var(--pending-bg)",
+              border: "1px solid rgba(196,148,60,0.20)",
+              color: "var(--color-pending)",
+            }}
+          >
+            Wrong network connected. Switch your wallet to Arbitrum Sepolia before encrypting or submitting a request.
+            <div className="mt-3">
+              <SwitchNetworkButton compact />
+            </div>
+          </motion.div>
+        )}
+
+        {isConfigured && isEmployee && !isWrongNetwork && !isReady && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -124,10 +159,10 @@ export default function EmployeePage() {
               border: "1px solid var(--border-dim)",
               color: "var(--color-muted)",
             }}
-          >
+            >
             <span className="inline-flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-pending animate-pending" />
-              Initializing CoFHE encryption client...
+              {error ? getErrorMessage(error) : "Initializing CoFHE encryption client..."}
             </span>
           </motion.div>
         )}
@@ -143,8 +178,9 @@ export default function EmployeePage() {
           >
             <RequestComposer
               onSubmit={handleSubmit}
-              isBusy={!isConfigured || !isEmployee || !isReady}
+              isBusy={!canSubmit}
               isEmployee={isEmployee}
+              disabledReason={submitDisabledReason}
             />
 
             {/* Encryption explainer */}
@@ -201,7 +237,11 @@ export default function EmployeePage() {
                 </span>
               </div>
             ) : (
-              <RequestHistory requests={requests} onDecrypt={handleDecrypt} />
+              <RequestHistory
+                requests={requests}
+                onDecrypt={handleDecrypt}
+                canReveal={isEmployee && isReady && !isWrongNetwork}
+              />
             )}
           </motion.div>
         </div>

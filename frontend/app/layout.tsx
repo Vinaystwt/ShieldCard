@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import dynamic from "next/dynamic";
-import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 
 const ClientProviders = dynamic(
