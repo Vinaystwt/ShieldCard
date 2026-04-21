@@ -18,7 +18,7 @@ import { getErrorMessage } from "@/lib/format";
 export default function EmployeePage() {
   const { isConfigured, employeeRequestsQuery, submitRequest } = useShieldCard();
   const { isEmployee } = useRoleRouting();
-  const { decryptStatus, encryptAmount, encryptCategory, error, isReady } = useCofhe();
+  const { decryptStatus, encryptRequestInputs, error, isReady } = useCofhe();
   const chainId = useChainId();
   const requests = employeeRequestsQuery.data ?? [];
   const isWrongNetwork = chainId !== targetChain.id;
@@ -40,8 +40,7 @@ export default function EmployeePage() {
     onStatusChange: Parameters<typeof submitRequest>[3],
   ) {
     const cents = Math.round(input.amount * 100);
-    const encAmount = await encryptAmount(cents);
-    const encCategory = await encryptCategory(input.category);
+    const { encAmount, encCategory } = await encryptRequestInputs(cents, input.category);
     await submitRequest(encAmount, encCategory, input.memo, onStatusChange);
   }
 
