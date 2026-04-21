@@ -21,6 +21,7 @@ interface RequestComposerProps {
 type Phase =
   | "idle"
   | "scrambling"
+  | "preparing"
   | "awaiting_wallet"
   | "submitted"
   | "confirming"
@@ -86,9 +87,11 @@ export function RequestComposer({
 
     startScramble(async () => {
       try {
+        setPhase("preparing");
         await onSubmit(
           { amount: parseFloat(amount), category, memo },
           (status) => {
+            if (status.phase === "preparing") setPhase("preparing");
             if (status.phase === "awaiting_wallet") setPhase("awaiting_wallet");
             if (status.phase === "submitted") setPhase("submitted");
             if (status.phase === "confirming") setPhase("confirming");
@@ -108,12 +111,13 @@ export function RequestComposer({
   }
 
   const isScrambling = phase === "scrambling";
+  const isPreparing = phase === "preparing";
   const isAwaitingWallet = phase === "awaiting_wallet";
   const isSubmitted = phase === "submitted";
   const isConfirming = phase === "confirming";
   const isDone = phase === "done";
   const isInProgress =
-    isScrambling || isAwaitingWallet || isSubmitted || isConfirming;
+    isScrambling || isPreparing || isAwaitingWallet || isSubmitted || isConfirming;
 
   return (
     <motion.div
@@ -284,6 +288,11 @@ export function RequestComposer({
             <>
               <span className="h-3 w-3 shrink-0 rounded-full bg-muted animate-pending" />
               Confirming on Arbitrum Sepolia...
+            </>
+          ) : isPreparing ? (
+            <>
+              <span className="h-3 w-3 shrink-0 rounded-full bg-muted animate-pending" />
+              Preparing transaction...
             </>
           ) : isScrambling ? (
             <>

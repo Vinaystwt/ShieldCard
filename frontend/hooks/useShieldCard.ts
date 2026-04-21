@@ -7,6 +7,7 @@ import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { RequestView, shieldCardAbi, shieldCardAddress, targetChain } from "@/lib/contracts";
 
 export type TransactionPhase =
+  | "preparing"
   | "awaiting_wallet"
   | "submitted"
   | "confirming"
@@ -20,6 +21,20 @@ export type TransactionStatus = {
 };
 
 type TransactionReporter = (status: TransactionStatus) => void;
+
+function withBuffer(value: bigint, bufferBps: bigint) {
+  return value + (value * bufferBps) / BigInt(10_000);
+}
+
+function maxBigInt(...values: Array<bigint | null | undefined>) {
+  return values.reduce<bigint | undefined>(
+    (current, value) => {
+      if (value == null) return current;
+      return current == null || value > current ? value : current;
+    },
+    undefined,
+  );
+}
 
 export function useShieldCard() {
   const queryClient = useQueryClient();
@@ -148,15 +163,67 @@ export function useShieldCard() {
       throw new Error("ShieldCard contract is not configured.");
     }
 
-    onStatusChange?.({ phase: "awaiting_wallet" });
-
     try {
+      onStatusChange?.({ phase: "preparing" });
+
+      const latestBlock = await publicClient.getBlock({ blockTag: "latest" });
+      const baseFeePerGas = latestBlock.baseFeePerGas;
+
+      let feeOverrides:
+        | {
+            gasPrice: bigint;
+          }
+        | {
+            maxFeePerGas: bigint;
+            maxPriorityFeePerGas: bigint;
+          };
+
+      try {
+        const estimatedFees = await publicClient.estimateFeesPerGas({
+          chain: targetChain,
+          type: "eip1559",
+        });
+
+        const priorityFee = estimatedFees.maxPriorityFeePerGas ?? BigInt(0);
+        const safeMaxFeePerGas = maxBigInt(
+          estimatedFees.maxFeePerGas,
+          baseFeePerGas != null
+            ? withBuffer(baseFeePerGas * BigInt(2) + priorityFee, BigInt(1_500))
+            : undefined,
+        );
+
+        if (safeMaxFeePerGas == null) {
+          throw new Error("Missing EIP-1559 fee estimate.");
+        }
+
+        feeOverrides = {
+          maxFeePerGas: safeMaxFeePerGas,
+          maxPriorityFeePerGas: priorityFee,
+        };
+      } catch {
+        const gasPrice = await publicClient.getGasPrice();
+        feeOverrides = { gasPrice: withBuffer(gasPrice, BigInt(1_500)) };
+      }
+
+      const gasEstimate = await publicClient.estimateContractGas({
+        address: shieldCardAddress,
+        abi: shieldCardAbi,
+        functionName,
+        args: args as never,
+        account: address,
+      });
+
+      onStatusChange?.({ phase: "awaiting_wallet" });
+
       const hash = await writeContractAsync({
         address: shieldCardAddress,
         abi: shieldCardAbi,
         functionName,
         args: args as never,
+        account: address,
         chainId: targetChain.id,
+        gas: withBuffer(gasEstimate, BigInt(2_000)),
+        ...feeOverrides,
       });
 
       onStatusChange?.({ phase: "submitted", hash });
