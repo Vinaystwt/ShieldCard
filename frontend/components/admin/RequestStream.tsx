@@ -9,6 +9,7 @@ import { SealedValue } from "@/components/ui/SealedValue";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatTimestamp, truncateAddress } from "@/lib/format";
+import { PACK_NAME } from "@/lib/contracts";
 import type { RequestView } from "@/lib/contracts";
 
 interface RequestStreamProps {
@@ -28,7 +29,6 @@ export function RequestStream({
   publishingId,
   canPublish,
 }: RequestStreamProps) {
-  const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set());
   const [publishMessage, setPublishMessage] = useState<Record<string, string>>({});
 
   if (requests.length === 0) {
@@ -58,9 +58,8 @@ export function RequestStream({
           }));
         }
       });
-      setPublishedIds((prev) => new Set([...prev, req.id.toString()]));
     } catch {
-      // parent owns the actual error state
+      // parent owns actual error state
     }
   }
 
@@ -69,20 +68,23 @@ export function RequestStream({
       <table className="w-full text-[13px]">
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border-dim)" }}>
-            {["#", "Employee", "Sealed Amount", "Memo", "Time", "Status", "Action"].map((col) => (
-              <th
-                key={col}
-                className="pb-3 pr-4 text-left text-[11px] font-medium uppercase tracking-[0.07em] text-subtle last:pr-0"
-              >
-                {col}
-              </th>
-            ))}
+            {["#", "Employee", "Pack", "Sealed Amount", "Memo", "Time", "Status", "Action"].map(
+              (col) => (
+                <th
+                  key={col}
+                  className="pb-3 pr-4 text-left text-[11px] font-medium uppercase tracking-[0.07em] text-subtle last:pr-0"
+                >
+                  {col}
+                </th>
+              ),
+            )}
           </tr>
         </thead>
         <tbody>
           {requests.map((req, i) => {
             const isPublishing = publishingId === req.id.toString();
             const publishHint = publishMessage[req.id.toString()];
+            const packName = PACK_NAME[req.packId] ?? `Pack #${req.packId}`;
 
             return (
               <motion.tr
@@ -99,10 +101,22 @@ export function RequestStream({
                   <span className="font-mono text-muted">{truncateAddress(req.employee)}</span>
                 </td>
                 <td className="py-3.5 pr-4">
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                    style={{
+                      background: "rgba(110,144,178,0.08)",
+                      border: "1px solid var(--steel-border)",
+                      color: "var(--color-steel)",
+                    }}
+                  >
+                    {packName}
+                  </span>
+                </td>
+                <td className="py-3.5 pr-4">
                   <SealedValue handle={req.encAmount} />
                 </td>
                 <td className="py-3.5 pr-4">
-                  <span className="block max-w-[160px] truncate text-muted">{req.memo}</span>
+                  <span className="block max-w-[140px] truncate text-muted">{req.memo}</span>
                 </td>
                 <td className="py-3.5 pr-4">
                   <span className="whitespace-nowrap text-subtle">

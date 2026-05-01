@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Lock, AlertCircle, CheckCircle } from "lucide-react";
 
 import { TransactionStatus } from "@/hooks/useShieldCard";
-import { CATEGORY_OPTIONS } from "@/lib/constants";
+import { POLICY_PACKS } from "@/lib/contracts";
 import { cn, getErrorMessage } from "@/lib/format";
 
 interface RequestComposerProps {
   onSubmit: (
-    input: { amount: number; category: number; memo: string },
+    input: { amount: number; packId: number; memo: string },
     onStatusChange: (status: TransactionStatus) => void,
   ) => Promise<void>;
   isBusy: boolean;
@@ -72,7 +72,7 @@ export function RequestComposer({
   disabledReason,
 }: RequestComposerProps) {
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState<number>(1);
+  const [packId, setPackId] = useState<number>(POLICY_PACKS[0].id);
   const [memo, setMemo] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -89,7 +89,7 @@ export function RequestComposer({
       try {
         setPhase("preparing");
         await onSubmit(
-          { amount: parseFloat(amount), category, memo },
+          { amount: parseFloat(amount), packId, memo },
           (status) => {
             if (status.phase === "preparing") setPhase("preparing");
             if (status.phase === "awaiting_wallet") setPhase("awaiting_wallet");
@@ -149,6 +149,7 @@ export function RequestComposer({
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* Amount */}
         <div>
           <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle">
             Amount (USD)
@@ -193,13 +194,14 @@ export function RequestComposer({
           </div>
         </div>
 
+        {/* Policy pack */}
         <div>
           <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle">
-            Category
+            Policy pack
           </label>
           <select
-            value={category}
-            onChange={(e) => setCategory(parseInt(e.target.value, 10))}
+            value={packId}
+            onChange={(e) => setPackId(parseInt(e.target.value, 10))}
             disabled={isInProgress || isDone}
             className="w-full rounded-md px-3 py-2.5 text-[14px] text-text"
             style={{
@@ -209,14 +211,15 @@ export function RequestComposer({
               appearance: "none",
             }}
           >
-            {CATEGORY_OPTIONS.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.label}
+            {POLICY_PACKS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} (limit ${(p.limitCents / 100).toLocaleString()})
               </option>
             ))}
           </select>
         </div>
 
+        {/* Memo */}
         <div>
           <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle">
             Memo
@@ -302,7 +305,7 @@ export function RequestComposer({
           ) : (
             <>
               <Lock className="h-4 w-4" />
-              Encrypt & Submit
+              Encrypt &amp; Submit
             </>
           )}
         </motion.button>

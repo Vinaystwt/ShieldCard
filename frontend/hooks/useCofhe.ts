@@ -28,28 +28,6 @@ export function useCofhe() {
     return encrypted;
   }
 
-  async function encryptCategory(categoryId: number) {
-    if (!client) throw new Error("CoFHE client is not connected.");
-    const { Encryptable } = await getCofheSdk();
-    const [encrypted] = await client
-      .encryptInputs([Encryptable.uint8(BigInt(categoryId))])
-      .execute();
-    return encrypted;
-  }
-
-  async function encryptRequestInputs(amountInCents: number, categoryId: number) {
-    if (!client) throw new Error("CoFHE client is not connected.");
-    const { Encryptable } = await getCofheSdk();
-    const [encAmount, encCategory] = await client
-      .encryptInputs([
-        Encryptable.uint32(BigInt(amountInCents)),
-        Encryptable.uint8(BigInt(categoryId)),
-      ])
-      .execute();
-
-    return { encAmount, encCategory };
-  }
-
   async function decryptStatus(ctHash: string) {
     if (!client) throw new Error("CoFHE client is not connected.");
     const { FheTypes } = await getCofheSdk();
@@ -68,8 +46,6 @@ export function useCofhe() {
     error,
     isReady,
     encryptAmount,
-    encryptCategory,
-    encryptRequestInputs,
     decryptStatus,
     decryptForPublish,
   };

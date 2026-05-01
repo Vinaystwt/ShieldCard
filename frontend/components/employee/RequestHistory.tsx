@@ -6,6 +6,7 @@ import { RevealCard } from "./RevealCard";
 import { SealedValue } from "@/components/ui/SealedValue";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatTimestamp } from "@/lib/format";
+import { PACK_NAME } from "@/lib/contracts";
 import type { RequestView } from "@/lib/contracts";
 
 interface RequestHistoryProps {
@@ -51,7 +52,16 @@ export function RequestHistory({ requests, onDecrypt, canReveal }: RequestHistor
               </div>
               <div className="flex flex-col gap-1.5 items-end">
                 <SealedValue handle={req.encAmount} />
-                <SealedValue handle={req.encCategory} />
+                <span
+                  className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full"
+                  style={{
+                    background: "rgba(110,144,178,0.08)",
+                    border: "1px solid var(--steel-border)",
+                    color: "var(--color-steel)",
+                  }}
+                >
+                  {PACK_NAME[req.packId] ?? `Pack #${req.packId}`}
+                </span>
                 <span
                   className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full"
                   style={{

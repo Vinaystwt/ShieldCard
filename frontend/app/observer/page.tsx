@@ -6,11 +6,12 @@ import { motion } from "framer-motion";
 import { Eye, RefreshCw } from "lucide-react";
 import { TopBar } from "@/components/shell/TopBar";
 import { RequestTable } from "@/components/observer/RequestTable";
+import { PackSummary } from "@/components/observer/PackSummary";
 import { PrivacyExplainer } from "@/components/observer/PrivacyExplainer";
 import { useShieldCard } from "@/hooks/useShieldCard";
 
 export default function ObserverPage() {
-  const { isConfigured, requestsQuery } = useShieldCard();
+  const { isConfigured, requestsQuery, packsQuery } = useShieldCard();
 
   return (
     <div className="min-h-screen bg-base">
@@ -28,11 +29,17 @@ export default function ObserverPage() {
               <div className="flex items-center gap-2 mb-3">
                 <div
                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-mid)" }}
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid var(--border-mid)",
+                  }}
                 >
                   <Eye className="w-3.5 h-3.5" style={{ color: "var(--color-muted)" }} />
                 </div>
-                <span className="text-[11px] font-medium uppercase tracking-[0.09em]" style={{ color: "var(--color-subtle)" }}>
+                <span
+                  className="text-[11px] font-medium uppercase tracking-[0.09em]"
+                  style={{ color: "var(--color-subtle)" }}
+                >
                   Observer lens
                 </span>
               </div>
@@ -42,13 +49,19 @@ export default function ObserverPage() {
               >
                 What the chain sees
               </h1>
-              <p className="text-[14px] leading-relaxed max-w-[500px]" style={{ color: "var(--color-muted)" }}>
-                All on-chain requests — public metadata and encrypted handles only.
-                Amounts and policy logic stay sealed regardless of who is watching.
+              <p
+                className="text-[14px] leading-relaxed max-w-[500px]"
+                style={{ color: "var(--color-muted)" }}
+              >
+                All on-chain requests — public metadata and encrypted handles only. Amounts and
+                policy thresholds stay sealed regardless of who is watching.
               </p>
             </div>
             <button
-              onClick={() => requestsQuery.refetch()}
+              onClick={() => {
+                requestsQuery.refetch();
+                packsQuery.refetch();
+              }}
               className="flex items-center gap-2 px-4 py-2 rounded-md text-[13px] transition-colors"
               style={{
                 border: "1px solid var(--border-dim)",
@@ -56,17 +69,38 @@ export default function ObserverPage() {
                 color: "var(--color-muted)",
               }}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${requestsQuery.isFetching ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${requestsQuery.isFetching || packsQuery.isFetching ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
           </div>
+        </motion.div>
+
+        {/* Pack summary strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.06 }}
+          className="mb-6"
+        >
+          <p
+            className="text-[11px] font-medium uppercase tracking-[0.09em] mb-3"
+            style={{ color: "var(--color-subtle)" }}
+          >
+            Policy pack compliance
+          </p>
+          <PackSummary
+            packs={packsQuery.data ?? []}
+            isLoading={packsQuery.isLoading}
+          />
         </motion.div>
 
         {/* Privacy explainer */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
+          transition={{ duration: 0.4, delay: 0.12 }}
           className="mb-6"
         >
           <PrivacyExplainer />
@@ -90,7 +124,8 @@ export default function ObserverPage() {
               </h2>
               {requestsQuery.data && (
                 <p className="text-[12px] mt-0.5" style={{ color: "var(--color-subtle)" }}>
-                  {requestsQuery.data.length} request{requestsQuery.data.length !== 1 ? "s" : ""} on Arbitrum Sepolia
+                  {requestsQuery.data.length} request
+                  {requestsQuery.data.length !== 1 ? "s" : ""} on Arbitrum Sepolia
                 </p>
               )}
             </div>

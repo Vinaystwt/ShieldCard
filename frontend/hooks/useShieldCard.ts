@@ -4,7 +4,15 @@ import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 
-import { RequestView, shieldCardAbi, shieldCardAddress, targetChain } from "@/lib/contracts";
+import {
+  PackInfo,
+  PackSummary,
+  POLICY_PACKS,
+  RequestView,
+  shieldCardAbi,
+  shieldCardAddress,
+  targetChain,
+} from "@/lib/contracts";
 
 export type TransactionPhase =
   | "preparing"
@@ -123,12 +131,49 @@ export function useShieldCard() {
     },
   });
 
+  const packsQuery = useQuery({
+    queryKey: ["shieldcard-packs", shieldCardAddress, targetChain.id],
+    enabled: isConfigured,
+    staleTime: 10_000,
+    refetchInterval: isConfigured ? 30_000 : false,
+    queryFn: async () => {
+      return Promise.all(
+        POLICY_PACKS.map(async (p) => {
+          const [name, active, limitSet] = (await publicClient!.readContract({
+            address: shieldCardAddress!,
+            abi: shieldCardAbi,
+            functionName: "getPackInfo",
+            args: [p.id],
+          })) as [string, boolean, boolean];
+
+          const [total, approved, denied, pending] = (await publicClient!.readContract({
+            address: shieldCardAddress!,
+            abi: shieldCardAbi,
+            functionName: "getPackSummary",
+            args: [p.id],
+          })) as [bigint, bigint, bigint, bigint];
+
+          return {
+            id: p.id,
+            name,
+            active,
+            limitSet,
+            total,
+            approved,
+            denied,
+            pending,
+          } satisfies PackInfo & PackSummary & { id: number };
+        }),
+      );
+    },
+  });
+
   const summary = useMemo(() => {
     const requests = requestsQuery.data ?? [];
     return {
       total: requests.length,
-      published: requests.filter((request) => request.resultPublished).length,
-      pending: requests.filter((request) => !request.resultPublished).length,
+      published: requests.filter((r) => r.resultPublished).length,
+      pending: requests.filter((r) => !r.resultPublished).length,
     };
   }, [requestsQuery.data]);
 
@@ -143,6 +188,9 @@ export function useShieldCard() {
       queryClient.invalidateQueries({
         queryKey: ["shieldcard-employee-requests", shieldCardAddress, targetChain.id],
       }),
+      queryClient.invalidateQueries({
+        queryKey: ["shieldcard-packs", shieldCardAddress, targetChain.id],
+      }),
     ]);
   }
 
@@ -153,7 +201,9 @@ export function useShieldCard() {
   }: {
     functionName:
       | "registerEmployee"
-      | "setEmployeeLimit"
+      | "createPack"
+      | "setPackLimit"
+      | "setPackActive"
       | "submitRequest"
       | "publishDecryptedResult";
     args: readonly unknown[];
@@ -170,13 +220,8 @@ export function useShieldCard() {
       const baseFeePerGas = latestBlock.baseFeePerGas;
 
       let feeOverrides:
-        | {
-            gasPrice: bigint;
-          }
-        | {
-            maxFeePerGas: bigint;
-            maxPriorityFeePerGas: bigint;
-          };
+        | { gasPrice: bigint }
+        | { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint };
 
       try {
         const estimatedFees = await publicClient.estimateFeesPerGas({
@@ -249,34 +294,42 @@ export function useShieldCard() {
     employee: `0x${string}`,
     onStatusChange?: TransactionReporter,
   ) {
-    return runWrite({
-      functionName: "registerEmployee",
-      args: [employee],
-      onStatusChange,
-    });
+    return runWrite({ functionName: "registerEmployee", args: [employee], onStatusChange });
   }
 
-  async function setEmployeeLimit(
-    employee: `0x${string}`,
+  async function createPack(
+    packId: number,
+    name: string,
+    onStatusChange?: TransactionReporter,
+  ) {
+    return runWrite({ functionName: "createPack", args: [packId, name], onStatusChange });
+  }
+
+  async function setPackLimit(
+    packId: number,
     encLimit: unknown,
     onStatusChange?: TransactionReporter,
   ) {
-    return runWrite({
-      functionName: "setEmployeeLimit",
-      args: [employee, encLimit],
-      onStatusChange,
-    });
+    return runWrite({ functionName: "setPackLimit", args: [packId, encLimit], onStatusChange });
+  }
+
+  async function setPackActive(
+    packId: number,
+    active: boolean,
+    onStatusChange?: TransactionReporter,
+  ) {
+    return runWrite({ functionName: "setPackActive", args: [packId, active], onStatusChange });
   }
 
   async function submitRequest(
+    packId: number,
     encAmount: unknown,
-    encCategory: unknown,
     memo: string,
     onStatusChange?: TransactionReporter,
   ) {
     return runWrite({
       functionName: "submitRequest",
-      args: [encAmount, encCategory, memo],
+      args: [packId, encAmount, memo],
       onStatusChange,
     });
   }
@@ -300,10 +353,13 @@ export function useShieldCard() {
     roleQuery,
     requestsQuery,
     employeeRequestsQuery,
+    packsQuery,
     summary,
     refreshQueries,
     registerEmployee,
-    setEmployeeLimit,
+    createPack,
+    setPackLimit,
+    setPackActive,
     submitRequest,
     publishResult,
   };

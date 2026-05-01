@@ -18,11 +18,12 @@ import { getErrorMessage } from "@/lib/format";
 export default function EmployeePage() {
   const { isConfigured, employeeRequestsQuery, submitRequest } = useShieldCard();
   const { isEmployee } = useRoleRouting();
-  const { decryptStatus, encryptRequestInputs, error, isReady } = useCofhe();
+  const { decryptStatus, encryptAmount, error, isReady } = useCofhe();
   const chainId = useChainId();
   const requests = employeeRequestsQuery.data ?? [];
   const isWrongNetwork = chainId !== targetChain.id;
   const canSubmit = isConfigured && isEmployee && isReady && !isWrongNetwork;
+
   const submitDisabledReason = !isConfigured
     ? "Configure NEXT_PUBLIC_SHIELDCARD_ADDRESS to enable live submissions."
     : !isEmployee
@@ -36,12 +37,12 @@ export default function EmployeePage() {
           : undefined;
 
   async function handleSubmit(
-    input: { amount: number; category: number; memo: string },
+    input: { amount: number; packId: number; memo: string },
     onStatusChange: Parameters<typeof submitRequest>[3],
   ) {
     const cents = Math.round(input.amount * 100);
-    const { encAmount, encCategory } = await encryptRequestInputs(cents, input.category);
-    await submitRequest(encAmount, encCategory, input.memo, onStatusChange);
+    const encAmount = await encryptAmount(cents);
+    await submitRequest(input.packId, encAmount, input.memo, onStatusChange);
   }
 
   async function handleDecrypt(requestId: bigint, encStatus: string): Promise<number> {
@@ -65,11 +66,17 @@ export default function EmployeePage() {
               <div className="flex items-center gap-2 mb-3">
                 <div
                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                  style={{ background: "rgba(110,144,178,0.10)", border: "1px solid var(--steel-border)" }}
+                  style={{
+                    background: "rgba(110,144,178,0.10)",
+                    border: "1px solid var(--steel-border)",
+                  }}
                 >
                   <Lock className="w-3.5 h-3.5" style={{ color: "var(--color-steel)" }} />
                 </div>
-                <span className="text-[11px] font-medium uppercase tracking-[0.09em]" style={{ color: "var(--color-subtle)" }}>
+                <span
+                  className="text-[11px] font-medium uppercase tracking-[0.09em]"
+                  style={{ color: "var(--color-subtle)" }}
+                >
                   Employee workspace
                 </span>
               </div>
@@ -79,9 +86,13 @@ export default function EmployeePage() {
               >
                 Submit privately.<br />Reveal only to yourself.
               </h1>
-              <p className="text-[14px] leading-relaxed max-w-[480px]" style={{ color: "var(--color-muted)" }}>
-                Your amount and category are encrypted before they leave this browser.
-                The decision stays sealed until your wallet opens it with a permit.
+              <p
+                className="text-[14px] leading-relaxed max-w-[480px]"
+                style={{ color: "var(--color-muted)" }}
+              >
+                Your amount is encrypted before it leaves this browser. Select your policy pack,
+                enter the amount, and submit — the decision stays sealed until your wallet opens
+                it with a permit.
               </p>
             </div>
             <button
@@ -93,7 +104,9 @@ export default function EmployeePage() {
                 color: "var(--color-muted)",
               }}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${employeeRequestsQuery.isFetching ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${employeeRequestsQuery.isFetching ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
           </div>
@@ -111,7 +124,9 @@ export default function EmployeePage() {
               color: "var(--color-pending)",
             }}
           >
-            Contract not configured. Set <code className="font-mono text-[12px]">NEXT_PUBLIC_SHIELDCARD_ADDRESS</code> to enable live flows.
+            Contract not configured. Set{" "}
+            <code className="font-mono text-[12px]">NEXT_PUBLIC_SHIELDCARD_ADDRESS</code> to
+            enable live flows.
           </motion.div>
         )}
 
@@ -126,7 +141,8 @@ export default function EmployeePage() {
               color: "var(--color-muted)",
             }}
           >
-            This wallet is not registered as an employee on this contract. Ask the admin to register your address.
+            This wallet is not registered as an employee on this contract. Ask the admin to
+            register your address.
           </motion.div>
         )}
 
@@ -141,7 +157,7 @@ export default function EmployeePage() {
               color: "var(--color-pending)",
             }}
           >
-            Wrong network connected. Switch your wallet to Arbitrum Sepolia before encrypting or submitting a request.
+            Wrong network. Switch your wallet to Arbitrum Sepolia before submitting.
             <div className="mt-3">
               <SwitchNetworkButton compact />
             </div>
@@ -158,7 +174,7 @@ export default function EmployeePage() {
               border: "1px solid var(--border-dim)",
               color: "var(--color-muted)",
             }}
-            >
+          >
             <span className="inline-flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-pending animate-pending" />
               {error ? getErrorMessage(error) : "Initializing CoFHE encryption client..."}
@@ -166,7 +182,7 @@ export default function EmployeePage() {
           </motion.div>
         )}
 
-        {/* Main layout: composer left (sticky), history right */}
+        {/* Main layout */}
         <div className="grid grid-cols-[2fr_3fr] gap-6 items-start">
           {/* Left: composer */}
           <motion.div
@@ -185,15 +201,13 @@ export default function EmployeePage() {
             {/* Encryption explainer */}
             <div
               className="rounded-xl p-5 relative overflow-hidden"
-              style={{
-                background: "#0E0E11",
-                border: "1px solid var(--border-dim)",
-              }}
+              style={{ background: "#0E0E11", border: "1px solid var(--border-dim)" }}
             >
               <div
                 className="absolute top-0 right-0 w-24 h-24 pointer-events-none"
                 style={{
-                  background: "radial-gradient(circle, rgba(110,144,178,0.05) 0%, transparent 70%)",
+                  background:
+                    "radial-gradient(circle, rgba(110,144,178,0.05) 0%, transparent 70%)",
                   transform: "translate(20%, -20%)",
                 }}
               />
@@ -201,9 +215,9 @@ export default function EmployeePage() {
                 How encryption works here
               </p>
               <p className="text-[12px] leading-relaxed" style={{ color: "var(--color-subtle)" }}>
-                Amount and category are encrypted via Fhenix CoFHE in your browser.
-                Only the ciphertext handle is submitted on-chain. The FHE contract evaluates
-                your request against the encrypted limit — no plaintext ever appears.
+                Amount is encrypted via Fhenix CoFHE in your browser. Only the ciphertext handle
+                is submitted on-chain. The FHE contract evaluates your request against the
+                encrypted pack limit — no plaintext ever appears.
               </p>
             </div>
           </motion.div>

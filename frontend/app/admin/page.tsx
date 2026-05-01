@@ -9,6 +9,7 @@ import { useChainId } from "wagmi";
 import { TopBar } from "@/components/shell/TopBar";
 import { RequestStream } from "@/components/admin/RequestStream";
 import { EmployeeManagement } from "@/components/admin/EmployeeManagement";
+import { PolicyPackManager } from "@/components/admin/PolicyPackManager";
 import { SwitchNetworkButton } from "@/components/ui/SwitchNetworkButton";
 import { useCofhe } from "@/hooks/useCofhe";
 import { useRoleRouting } from "@/hooks/useRoleRouting";
@@ -22,8 +23,9 @@ export default function AdminPage() {
   const {
     isConfigured,
     registerEmployee,
+    setPackLimit,
     requestsQuery,
-    setEmployeeLimit,
+    packsQuery,
     publishResult,
     summary,
   } = useShieldCard();
@@ -33,6 +35,7 @@ export default function AdminPage() {
   const isWrongNetwork = chainId !== targetChain.id;
   const canRegister = isAdmin && isConfigured && !isWrongNetwork;
   const canUseCofheActions = canRegister && isReady;
+
   const adminDisabledReason = !isConfigured
     ? "Configure NEXT_PUBLIC_SHIELDCARD_ADDRESS to enable admin actions."
     : !isAdmin
@@ -40,6 +43,7 @@ export default function AdminPage() {
       : isWrongNetwork
         ? "Switch the wallet to Arbitrum Sepolia before using admin actions."
         : undefined;
+
   const cofheDisabledReason = adminDisabledReason
     ? adminDisabledReason
     : !isReady
@@ -77,13 +81,13 @@ export default function AdminPage() {
     await registerEmployee(employee, onStatusChange);
   }
 
-  async function handleSetLimit(
-    employee: `0x${string}`,
+  async function handleSetPackLimit(
+    packId: number,
     amountUsd: number,
-    onStatusChange: Parameters<typeof setEmployeeLimit>[2],
+    onStatusChange: Parameters<typeof setPackLimit>[2],
   ) {
     const encLimit = await encryptAmount(Math.round(amountUsd * 100));
-    await setEmployeeLimit(employee, encLimit, onStatusChange);
+    await setPackLimit(packId, encLimit, onStatusChange);
   }
 
   const metrics = [
@@ -91,7 +95,6 @@ export default function AdminPage() {
       label: "Total requests",
       value: summary.total,
       valueColor: "var(--color-text)",
-      accentColor: "var(--color-copper)",
       accentBg: "rgba(200,131,63,0.07)",
       accentBorder: "var(--copper-border-dim)",
     },
@@ -99,7 +102,6 @@ export default function AdminPage() {
       label: "Published to audit",
       value: summary.published,
       valueColor: "var(--color-approved)",
-      accentColor: "var(--color-approved)",
       accentBg: "rgba(77,145,112,0.07)",
       accentBorder: "rgba(77,145,112,0.16)",
     },
@@ -107,7 +109,6 @@ export default function AdminPage() {
       label: "Awaiting publish",
       value: summary.pending,
       valueColor: summary.pending > 0 ? "var(--color-pending)" : "var(--color-subtle)",
-      accentColor: summary.pending > 0 ? "var(--color-pending)" : "var(--color-subtle)",
       accentBg: summary.pending > 0 ? "rgba(196,148,60,0.07)" : "transparent",
       accentBorder: summary.pending > 0 ? "rgba(196,148,60,0.16)" : "var(--border-dim)",
     },
@@ -129,11 +130,17 @@ export default function AdminPage() {
               <div className="flex items-center gap-2 mb-3">
                 <div
                   className="w-6 h-6 rounded-md flex items-center justify-center"
-                  style={{ background: "rgba(200,131,63,0.10)", border: "1px solid var(--copper-border-dim)" }}
+                  style={{
+                    background: "rgba(200,131,63,0.10)",
+                    border: "1px solid var(--copper-border-dim)",
+                  }}
                 >
                   <Shield className="w-3.5 h-3.5" style={{ color: "var(--color-copper)" }} />
                 </div>
-                <span className="text-[11px] font-medium uppercase tracking-[0.09em]" style={{ color: "var(--color-subtle)" }}>
+                <span
+                  className="text-[11px] font-medium uppercase tracking-[0.09em]"
+                  style={{ color: "var(--color-subtle)" }}
+                >
                   Admin cockpit
                 </span>
               </div>
@@ -143,9 +150,12 @@ export default function AdminPage() {
               >
                 Control hidden limits.<br />Publish only final outcomes.
               </h1>
-              <p className="text-[14px] leading-relaxed max-w-[500px]" style={{ color: "var(--color-muted)" }}>
-                Encrypted limits stay sealed after submission. Only the approved or denied result
-                enters the public audit trail — never the threshold itself.
+              <p
+                className="text-[14px] leading-relaxed max-w-[500px]"
+                style={{ color: "var(--color-muted)" }}
+              >
+                Encrypted pack limits stay sealed after submission. Only the approved or denied
+                result enters the public audit trail — never the threshold itself.
               </p>
             </div>
             <button
@@ -157,7 +167,9 @@ export default function AdminPage() {
                 color: "var(--color-muted)",
               }}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${requestsQuery.isFetching ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${requestsQuery.isFetching ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
           </div>
@@ -175,14 +187,10 @@ export default function AdminPage() {
               key={m.label}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.10 + i * 0.06 }}
+              transition={{ duration: 0.35, delay: 0.1 + i * 0.06 }}
               className="rounded-lg px-6 py-5 relative overflow-hidden"
-              style={{
-                background: "#0E0E11",
-                border: `1px solid ${m.accentBorder}`,
-              }}
+              style={{ background: "#0E0E11", border: `1px solid ${m.accentBorder}` }}
             >
-              {/* Subtle corner glow */}
               <div
                 className="absolute top-0 right-0 w-24 h-24 pointer-events-none"
                 style={{
@@ -218,7 +226,8 @@ export default function AdminPage() {
               color: "var(--color-pending)",
             }}
           >
-            Contract not configured. Set <code className="font-mono text-[12px]">NEXT_PUBLIC_SHIELDCARD_ADDRESS</code>.
+            Contract not configured. Set{" "}
+            <code className="font-mono text-[12px]">NEXT_PUBLIC_SHIELDCARD_ADDRESS</code>.
           </motion.div>
         )}
 
@@ -233,7 +242,8 @@ export default function AdminPage() {
               color: "var(--color-muted)",
             }}
           >
-            This wallet is not the admin for this contract. Connect the admin wallet to access write actions.
+            This wallet is not the admin for this contract. Connect the admin wallet to access
+            write actions.
           </motion.div>
         )}
 
@@ -248,7 +258,7 @@ export default function AdminPage() {
               color: "var(--color-pending)",
             }}
           >
-            Wrong network connected. Switch the admin wallet to Arbitrum Sepolia before registering employees, setting limits, or publishing results.
+            Wrong network. Switch the admin wallet to Arbitrum Sepolia before using admin actions.
             <div className="mt-3">
               <SwitchNetworkButton compact />
             </div>
@@ -279,11 +289,23 @@ export default function AdminPage() {
         >
           <EmployeeManagement
             onRegister={handleRegister}
-            onSetLimit={handleSetLimit}
             canRegister={canRegister}
-            canSetLimit={canUseCofheActions}
             registerDisabledReason={adminDisabledReason}
-            limitDisabledReason={cofheDisabledReason}
+          />
+        </motion.div>
+
+        {/* Policy pack manager */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.16 }}
+          className="mb-6"
+        >
+          <PolicyPackManager
+            packs={packsQuery.data ?? []}
+            onSetLimit={handleSetPackLimit}
+            canManage={canUseCofheActions}
+            disabledReason={cofheDisabledReason}
           />
         </motion.div>
 
@@ -291,7 +313,7 @@ export default function AdminPage() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.18 }}
+          transition={{ duration: 0.4, delay: 0.22 }}
           className="rounded-xl p-6"
           style={{ background: "#0E0E11", border: "1px solid var(--border-dim)" }}
         >
