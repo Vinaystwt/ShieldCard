@@ -13,7 +13,7 @@ const HEADLINE_LINES = [
 
 const STATS = [
   { value: "FHE-native", label: "encryption" },
-  { value: "0 plaintext", label: "on-chain" },
+  { value: "FHE-sealed", label: "amounts & limits" },
   { value: "permit-gated", label: "reveal" },
 ];
 
@@ -87,7 +87,7 @@ export function HeroSection() {
             style={{ color: "var(--color-muted)" }}
           >
             ShieldCard enforces payment policy on encrypted data.
-            Amounts, limits, and decisions never appear in plaintext — on-chain or off.
+            Spend amounts and pack limits stay private on-chain. Governance structure remains auditable.
           </motion.p>
 
           {/* CTAs */}

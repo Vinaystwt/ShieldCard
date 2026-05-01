@@ -14,7 +14,7 @@ const problems = [
 const solutions = [
   "Amounts encrypted before leaving the browser",
   "Limits stored as FHE ciphertext handles",
-  "Policy evaluated privately — no plaintext paths",
+  "Pack limits and spend amounts stay private on-chain",
   "Only authorized parties can read results",
 ];
 

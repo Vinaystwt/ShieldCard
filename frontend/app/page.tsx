@@ -66,7 +66,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-[1280px] flex items-center justify-between">
           <WordMark size="sm" />
           <p className="text-[12px] text-subtle">
-            Built on Fhenix CoFHE · Arbitrum Sepolia · Fhenix Buildathon Wave 2
+            Built on Fhenix CoFHE · Arbitrum Sepolia · Fhenix Buildathon · Wave 3 upgrade
           </p>
         </div>
       </footer>

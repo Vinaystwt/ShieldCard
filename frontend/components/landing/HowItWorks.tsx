@@ -9,7 +9,7 @@ const steps = [
     n: "01",
     icon: Shield,
     title: "Employee submits encrypted",
-    body: "Amount and category are encrypted in the browser via CoFHE before any network call. Only the ciphertext leaves the device.",
+    body: "The spend amount is encrypted in the browser via CoFHE before any network call. Only the ciphertext leaves the device.",
     accent: "copper",
   },
   {

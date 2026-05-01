@@ -189,7 +189,7 @@ export function ArchitectureSection() {
                 FHE operations
               </p>
               <div className="flex items-center gap-2">
-                {["FHE.lte", "FHE.eq", "FHE.and", "FHE.select"].map((op) => (
+                {["FHE.lte", "FHE.select"].map((op) => (
                   <span
                     key={op}
                     className="text-[11px] font-mono px-2.5 py-1 rounded"

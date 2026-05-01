@@ -5,16 +5,16 @@ import { Lock, EyeOff, Eye } from "lucide-react";
 const VISIBLE = [
   { label: "Request ID", note: "Sequential counter" },
   { label: "Employee address", note: "Truncated wallet address" },
+  { label: "Policy pack", note: "Travel, SaaS, Vendor, or Marketing — selected by employee" },
   { label: "Memo", note: "Plain-text description" },
   { label: "Timestamp", note: "Block submission time" },
   { label: "Published status", note: "PENDING / APPROVED / DENIED (after admin publish)" },
 ];
 
 const HIDDEN = [
-  { label: "Spending amount", note: "Encrypted as euint32 ciphertext handle" },
-  { label: "Request category", note: "Encrypted as euint8 ciphertext handle" },
-  { label: "Employee limit", note: "Encrypted policy threshold — never leaves FHE storage" },
-  { label: "Policy logic", note: "Evaluation is private: amount ≤ limit AND category = 1" },
+  { label: "Spend amount", note: "Encrypted as euint32 ciphertext — value hidden on-chain" },
+  { label: "Pack spend limit", note: "Encrypted policy threshold — never leaves FHE storage" },
+  { label: "Policy decision", note: "FHE evaluates: encrypted amount ≤ encrypted pack limit" },
   { label: "Raw result", note: "Encrypted until admin publishes via Threshold Network" },
 ];
 
