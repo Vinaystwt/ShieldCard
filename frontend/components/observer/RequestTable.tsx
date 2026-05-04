@@ -82,7 +82,7 @@ export function RequestTable({ requests }: RequestTableProps) {
                   <span className="text-subtle">{formatTimestamp(req.timestamp)}</span>
                 </td>
                 <td className="py-3.5">
-                  <StatusBadge status={req.publicStatus} published={req.resultPublished} />
+                  <StatusBadge status={req.publicStatus} published={req.resultPublished} inReview={req.inReview} />
                 </td>
               </motion.tr>
             );

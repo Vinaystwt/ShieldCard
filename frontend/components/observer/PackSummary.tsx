@@ -10,6 +10,7 @@ interface PackData {
   approved: bigint;
   denied: bigint;
   pending: bigint;
+  inReview: bigint;
 }
 
 interface PackSummaryProps {
@@ -29,6 +30,7 @@ export function PackSummary({ packs, isLoading, isError }: PackSummaryProps) {
         const approved = Number(live?.approved ?? BigInt(0));
         const denied = Number(live?.denied ?? BigInt(0));
         const pending = Number(live?.pending ?? BigInt(0));
+        const inReview = Number(live?.inReview ?? BigInt(0));
         const approvalRate = total > 0 ? Math.round((approved / total) * 100) : null;
 
         return (
@@ -86,8 +88,11 @@ export function PackSummary({ packs, isLoading, isError }: PackSummaryProps) {
                     )}
                   </div>
                   <span className="text-[11px] text-denied">{denied} denied</span>
+                  {inReview > 0 && (
+                    <span className="text-[11px] text-pending">{inReview} in review</span>
+                  )}
                   {pending > 0 && (
-                    <span className="text-[11px] text-pending">{pending} pending</span>
+                    <span className="text-[11px] text-subtle">{pending} pending</span>
                   )}
                 </div>
               </>

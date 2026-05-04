@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { motion } from "framer-motion";
-import { Lock, RefreshCw } from "lucide-react";
+import { Lock, RefreshCw, Snowflake, PauseCircle } from "lucide-react";
 import { useChainId } from "wagmi";
 import { TopBar } from "@/components/shell/TopBar";
 import { RequestComposer } from "@/components/employee/RequestComposer";
@@ -16,13 +16,15 @@ import { targetChain } from "@/lib/contracts";
 import { getErrorMessage } from "@/lib/format";
 
 export default function EmployeePage() {
-  const { isConfigured, employeeRequestsQuery, submitRequest } = useShieldCard();
+  const { isConfigured, employeeRequestsQuery, submitRequest, roleQuery } = useShieldCard();
   const { isEmployee } = useRoleRouting();
   const { decryptStatus, encryptAmount, error, isReady } = useCofhe();
   const chainId = useChainId();
   const requests = employeeRequestsQuery.data ?? [];
   const isWrongNetwork = chainId !== targetChain.id;
-  const canSubmit = isConfigured && isEmployee && isReady && !isWrongNetwork;
+  const isFrozen = roleQuery.data?.isFrozen ?? false;
+  const isPaused = roleQuery.data?.isPaused ?? false;
+  const canSubmit = isConfigured && isEmployee && isReady && !isWrongNetwork && !isFrozen && !isPaused;
 
   const submitDisabledReason = !isConfigured
     ? "Configure NEXT_PUBLIC_SHIELDCARD_ADDRESS to enable live submissions."
@@ -30,11 +32,15 @@ export default function EmployeePage() {
       ? "This wallet must be registered as an employee before it can submit requests."
       : isWrongNetwork
         ? "Switch your wallet to Arbitrum Sepolia before submitting."
-        : !isReady
-          ? error
-            ? getErrorMessage(error)
-            : "CoFHE encryption is still initializing."
-          : undefined;
+        : isFrozen
+          ? "Your account is frozen. Contact your admin."
+          : isPaused
+            ? "Submissions are paused by admin."
+            : !isReady
+              ? error
+                ? getErrorMessage(error)
+                : "CoFHE encryption is still initializing."
+              : undefined;
 
   async function handleSubmit(
     input: { amount: number; packId: number; memo: string },
@@ -127,6 +133,38 @@ export default function EmployeePage() {
             Contract not configured. Set{" "}
             <code className="font-mono text-[12px]">NEXT_PUBLIC_SHIELDCARD_ADDRESS</code> to
             enable live flows.
+          </motion.div>
+        )}
+
+        {isConfigured && isEmployee && isFrozen && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-lg px-4 py-3 text-[13px] flex items-center gap-2.5"
+            style={{
+              background: "rgba(110,144,178,0.06)",
+              border: "1px solid var(--steel-border)",
+              color: "var(--color-steel)",
+            }}
+          >
+            <Snowflake className="w-4 h-4 shrink-0" />
+            Your account is frozen. You cannot submit new requests until your admin unfreezes you.
+          </motion.div>
+        )}
+
+        {isConfigured && isPaused && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-lg px-4 py-3 text-[13px] flex items-center gap-2.5"
+            style={{
+              background: "var(--pending-bg)",
+              border: "1px solid rgba(196,148,60,0.20)",
+              color: "var(--color-pending)",
+            }}
+          >
+            <PauseCircle className="w-4 h-4 shrink-0" />
+            Submissions are paused by your admin. Existing requests are not affected.
           </motion.div>
         )}
 

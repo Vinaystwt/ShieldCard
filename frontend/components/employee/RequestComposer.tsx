@@ -213,7 +213,7 @@ export function RequestComposer({
           >
             {POLICY_PACKS.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.name} (limit ${(p.limitCents / 100).toLocaleString()})
+                {p.name} (limit ${(p.hardLimitCents / 100).toLocaleString()})
               </option>
             ))}
           </select>
