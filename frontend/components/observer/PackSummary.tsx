@@ -15,9 +15,10 @@ interface PackData {
 interface PackSummaryProps {
   packs: PackData[];
   isLoading?: boolean;
+  isError?: boolean;
 }
 
-export function PackSummary({ packs, isLoading }: PackSummaryProps) {
+export function PackSummary({ packs, isLoading, isError }: PackSummaryProps) {
   const packMap = new Map(packs.map((p) => [p.id, p]));
 
   return (
@@ -62,6 +63,10 @@ export function PackSummary({ packs, isLoading }: PackSummaryProps) {
               <div className="flex items-center gap-1.5 h-8">
                 <span className="h-1.5 w-1.5 rounded-full bg-copper animate-pending" />
                 <span className="text-[11px] text-subtle">Loading...</span>
+              </div>
+            ) : isError ? (
+              <div className="flex items-center gap-1.5 h-8">
+                <span className="text-[11px] text-denied opacity-70">RPC error</span>
               </div>
             ) : (
               <>

@@ -18,6 +18,7 @@ const config = createConfig({
     [targetChain.id]: http(
       process.env.NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL ||
         targetChain.rpcUrls.default.http[0],
+      { timeout: 12_000 },
     ),
   },
   ssr: false,

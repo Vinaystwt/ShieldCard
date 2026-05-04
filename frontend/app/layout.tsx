@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: "ShieldCard — Corporate spend control. Nothing exposed.",
   description:
     "FHE-backed confidential payment policy enforcement. Amounts, limits, and decisions stay encrypted — on Arbitrum Sepolia via Fhenix CoFHE.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

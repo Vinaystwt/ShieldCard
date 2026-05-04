@@ -22,10 +22,20 @@ export function useCofhe() {
   async function encryptAmount(amountInCents: number) {
     if (!client) throw new Error("CoFHE client is not connected.");
     const { Encryptable } = await getCofheSdk();
-    const [encrypted] = await client
-      .encryptInputs([Encryptable.uint32(BigInt(amountInCents))])
-      .execute();
-    return encrypted;
+    try {
+      const [encrypted] = await client
+        .encryptInputs([Encryptable.uint32(BigInt(amountInCents))])
+        .execute();
+      return encrypted;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes("fetch") || msg.toLowerCase().includes("network")) {
+        throw new Error(
+          "CoFHE prover is temporarily unreachable. Wait a moment and try again.",
+        );
+      }
+      throw err;
+    }
   }
 
   async function decryptStatus(ctHash: string) {

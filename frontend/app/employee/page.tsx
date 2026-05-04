@@ -249,6 +249,23 @@ export default function EmployeePage() {
                   Loading your requests...
                 </span>
               </div>
+            ) : employeeRequestsQuery.isError ? (
+              <div
+                className="rounded-lg px-4 py-3 text-[13px] flex items-start gap-2"
+                style={{
+                  background: "var(--denied-bg)",
+                  border: "1px solid rgba(147,68,68,0.20)",
+                  color: "var(--color-denied)",
+                }}
+              >
+                <span>Failed to load requests. Check your RPC connection and refresh.</span>
+                <button
+                  onClick={() => employeeRequestsQuery.refetch()}
+                  className="shrink-0 underline opacity-70 hover:opacity-100"
+                >
+                  Retry
+                </button>
+              </div>
             ) : (
               <RequestHistory
                 requests={requests}

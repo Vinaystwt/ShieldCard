@@ -93,6 +93,7 @@ export default function ObserverPage() {
           <PackSummary
             packs={packsQuery.data ?? []}
             isLoading={packsQuery.isLoading}
+            isError={packsQuery.isError}
           />
         </motion.div>
 
