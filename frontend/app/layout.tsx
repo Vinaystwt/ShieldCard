@@ -22,6 +22,25 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <head>
+        {/* Recover from stale chunk 404s by hard-reloading once */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function(){
+  var _orig = window.__webpack_require__;
+  window.addEventListener('error', function(e){
+    var src = e && e.filename ? e.filename : '';
+    if(src.indexOf('/_next/static/chunks/') !== -1 && !sessionStorage.getItem('__chunk_reload')){
+      sessionStorage.setItem('__chunk_reload','1');
+      window.location.reload(true);
+    }
+  }, true);
+})();
+`,
+          }}
+        />
+      </head>
       <body className="min-h-screen antialiased">
         <ClientProviders>{children}</ClientProviders>
       </body>
