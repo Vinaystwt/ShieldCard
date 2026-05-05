@@ -1,182 +1,234 @@
-# ShieldCard
+<div align="center">
 
-![ShieldCard wordmark](./brand-assets/shieldcard-wordmark.svg)
+<img src="./brand-assets/shieldcard-wordmark.svg" alt="ShieldCard" width="480"/>
 
-ShieldCard is a confidential corporate spend control app built for the Fhenix Buildathon. It demonstrates how a company can enforce spend-policy logic on-chain without exposing employee request amounts, encrypted per-employee limits, or private policy decisions in public state.
+<br/><br/>
 
-Live demo: https://shieldcard-fhenix.netlify.app  
-Contract: `0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a` on Arbitrum Sepolia  
-Explorer: https://sepolia.arbiscan.io/address/0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a
+**Confidential corporate spend approvals on-chain — amounts, thresholds, and decisions stay encrypted.**
 
-## Problem
+<br/>
 
-Most on-chain treasury tools are transparent by default. That is useful for auditability, but it is a poor fit for routine corporate operations where payment amounts, department budgets, category policies, and approval thresholds should not be public.
+[![Live App](https://img.shields.io/badge/Live%20App-shieldcard--fhenix.netlify.app-C8833F?style=flat-square&logo=netlify&logoColor=white)](https://shieldcard-fhenix.netlify.app)
+[![Contract](https://img.shields.io/badge/Contract-0xaa4C...CC5a-6E90B2?style=flat-square)](https://sepolia.arbiscan.io/address/0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a)
+[![Network](https://img.shields.io/badge/Network-Arbitrum%20Sepolia-2B4DA8?style=flat-square)](https://sepolia.arbiscan.io)
+[![Tests](https://img.shields.io/badge/Tests-80%20passing-4E9B6A?style=flat-square)](#)
+[![License](https://img.shields.io/badge/License-MIT-white?style=flat-square)](./LICENSE)
 
-ShieldCard keeps those inputs encrypted while still allowing the policy engine to evaluate:
+</div>
 
-- whether a request amount is within the encrypted hard limit for its policy pack
-- whether the amount falls below the auto-approval threshold or requires admin review
-- whether the rolling budget cap for the period has been reached
-- what the final outcome should be: auto-approved, auto-denied, or escalated for review
+---
+
+## Why ShieldCard Exists
+
+Public blockchains expose every transaction detail by default. That works for auditability — but it breaks corporate spend workflows.
+
+When an employee submits a payment request, the amount they're requesting, the policy thresholds governing that request, the department budget remaining, and the outcome of the approval decision are all information that belongs inside a company's trust boundary — not broadcast to any block explorer.
+
+ShieldCard enforces spend-policy logic on-chain without revealing any of those values. The policy engine evaluates encrypted inputs and produces an encrypted decision. The public ledger records that a request was evaluated, not what the numbers were.
+
+Auditability is preserved through published outcomes and deterministic settlement receipt hashes. Privacy is enforced through Fhenix CoFHE fully homomorphic encryption.
+
+---
 
 ## What ShieldCard Does
 
-- Admin creates policy packs (Travel, SaaS, Vendor, Marketing) with encrypted thresholds
-- Admin registers employees and can freeze or unfreeze individual accounts
-- Employee encrypts their spend amount locally and submits to a policy pack
-- Contract evaluates the policy privately using FHE: auto-approves, auto-denies, or escalates to admin review
-- Employee can privately reveal their own outcome using a permit-based decrypt
-- Admin resolves review-queue items and publishes final outcomes with settlement receipts
-- Observer sees only public metadata, ciphertext handles, and published outcomes — amounts and thresholds remain sealed
+| Capability | Detail |
+|---|---|
+| **Encrypted request submission** | Employee encrypts spend amount in-browser via CoFHE SDK; only the ciphertext handle is submitted on-chain |
+| **Confidential policy packs** | Admin sets encrypted hard limits, auto-approval thresholds, and rolling budget caps per pack |
+| **Three-path FHE routing** | Contract evaluates encrypted comparisons and routes to Auto-Approved, Needs Review, or Auto-Denied |
+| **Rolling encrypted budget** | Budget accumulator updates homomorphically each submission; exhausted budget triggers Auto-Denied |
+| **Admin review queue** | Needs-Review requests surface to admin for manual approve or deny |
+| **Employee freeze / unfreeze** | Admin can freeze individual employees; frozen accounts cannot submit requests |
+| **Global pause / unpause** | Admin can halt all new submissions without affecting existing requests |
+| **Pack activation / deactivation** | Individual policy packs can be toggled active without affecting others |
+| **Budget epoch reset** | Admin resets the encrypted rolling budget accumulator to restart a spend period |
+| **Private employee reveal** | Employee privately decrypts their own request outcome via Fhenix permit; no admin involvement |
+| **Public observer audit trail** | Published outcomes, pack metrics, and receipt hashes are publicly readable without a wallet |
+| **Settlement receipt hash** | Deterministic `keccak256` receipt committed on-chain after every finalised request |
+
+---
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    E[Employee Browser] -->|Encrypt amount locally| C[ShieldCard Frontend]
-    C -->|submitRequest| P[ShieldCardPolicyEngine.sol]
-    A[Admin Browser] -->|Encrypt pack thresholds| C
-    C -->|setPolicyThresholds| P
-    P -->|FHE 3-tier evaluation| F[Fhenix CoFHE / Threshold Network]
-    F -->|encrypted result handle| P
-    E -->|permit-based decrypt| F
-    A -->|decrypt for tx + publish| F
-    A -->|publishDecryptedResult| P
-    A -->|adminReviewRequest| P
-    O[Observer] -->|public reads only| P
+<img src="./brand-assets/readme-architecture.svg" alt="ShieldCard system architecture: Employee browser → CoFHE encryption → frontend → ShieldCardPolicyEngine → Fhenix Threshold Network → admin / employee / observer views" width="100%"/>
+
+<img src="./brand-assets/readme-lifecycle.svg" alt="Request lifecycle: submit encrypted request → FHE 3-tier evaluation → auto approved / needs review / auto denied → admin review → publish outcome → settlement receipt" width="100%"/>
+
+<img src="./brand-assets/readme-privacy.svg" alt="Privacy boundary: public state vs FHE-sealed values" width="100%"/>
+
+---
+
+## Core Contract
+
+| Field | Value |
+|---|---|
+| **Contract** | `ShieldCardPolicyEngine` |
+| **Address** | [`0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a`](https://sepolia.arbiscan.io/address/0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a) |
+| **Network** | Arbitrum Sepolia (chainId 421614) |
+| **Admin** | `0x94c188F8280cA706949CC030F69e42B5544514ac` |
+| **Explorer** | https://sepolia.arbiscan.io/address/0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a |
+
+### Policy Packs
+
+| ID | Name | Purpose |
+|---|---|---|
+| 1 | Travel | Travel expense requests |
+| 2 | SaaS | Software subscription payments |
+| 3 | Vendor | Vendor and supplier payments |
+| 4 | Marketing | Marketing and campaign spend |
+
+All four packs are active with encrypted thresholds and rolling budgets configured.
+
+### Settlement Receipt
+
+Every finalised request receives a deterministic on-chain receipt:
+
+```solidity
+receiptHash = keccak256(abi.encodePacked(
+    requestId,
+    req.employee,
+    req.packId,
+    finalStatus,
+    req.timestamp,
+    address(this),
+    block.chainid
+));
 ```
 
-## Workflow
+The receipt uniquely identifies the outcome without exposing the spend amount.
 
-```mermaid
-flowchart TD
-    Start[Employee opens app] --> Connect[Connect wallet]
-    Connect --> Encrypt[Encrypt amount and category locally]
-    Encrypt --> Submit[Submit encrypted request]
-    Submit --> Evaluate[Contract evaluates private policy]
-    Evaluate --> Result[Encrypted result stored on-chain]
-    Result --> Reveal[Employee reveals result privately]
-    Result --> Publish[Admin publishes final outcome]
-    Publish --> Audit[Observer sees public audit trail]
+---
+
+## Confidential Policy Engine
+
+ShieldCard's FHE policy logic runs entirely on encrypted operands. No plaintext amount or threshold value is ever accessible to the contract at evaluation time.
+
+### Three-Tier Routing
+
+```
+Tier 1 — Auto-Approved:   amount ≤ autoThreshold  AND  newBudget ≤ budgetLimit
+Tier 2 — Needs Review:    amount ≤ hardLimit       AND  newBudget ≤ budgetLimit
+                          (implicitly: amount > autoThreshold)
+Tier 3 — Auto-Denied:     amount > hardLimit        OR  newBudget > budgetLimit
 ```
 
-## Role Interaction
+Implemented on-chain as a nested FHE select:
 
-```mermaid
-flowchart LR
-    Admin -->|register / freeze employee| Contract
-    Admin -->|set encrypted pack thresholds| Contract
-    Admin -->|adminReviewRequest| Contract
-    Admin -->|publishDecryptedResult| Contract
-    Employee -->|submitRequest with encrypted amount| Contract
-    Employee -->|private reveal via permit| Threshold[Threshold Network]
-    Observer -->|read public request metadata| Contract
+```solidity
+euint8 result = FHE.select(autoOk, statusAuto,
+                  FHE.select(reviewOk, statusReview, statusDenied));
 ```
 
-## Request Lifecycle
+### Request Status Lifecycle
 
-```mermaid
-sequenceDiagram
-    participant Admin
-    participant Employee
-    participant Frontend
-    participant Contract
-    participant TN as Threshold Network
+| Code | Status | Meaning |
+|---|---|---|
+| `0` | Submitted | Initial state; FHE result not yet published |
+| `1` | Auto Approved | FHE confirmed amount within auto-threshold and budget |
+| `2` | Needs Review | FHE confirmed within hard limit; above auto-threshold; queued for admin |
+| `3` | Auto Denied | Amount exceeded hard limit or budget was exhausted |
+| `4` | Admin Approved | Admin resolved a Needs-Review request as approved |
+| `5` | Admin Denied | Admin resolved a Needs-Review request as denied |
 
-    Admin->>Frontend: Encrypt hard limit, auto-threshold, budget
-    Frontend->>Contract: setPolicyThresholds(packId, encHard, encAuto, encBudget)
-    Employee->>Frontend: Enter amount, pack, memo
-    Frontend->>Frontend: Encrypt amount locally
-    Frontend->>Contract: submitRequest(packId, encAmount, memo)
-    Contract->>TN: FHE: compare amount vs thresholds
-    TN-->>Contract: Encrypted status (AUTO_APPROVED / NEEDS_REVIEW / AUTO_DENIED)
-    Employee->>TN: Reveal with permit
-    TN-->>Employee: Private outcome + label
-    Admin->>TN: Decrypt for transaction
-    TN-->>Admin: Plain status + signature
-    Admin->>Contract: publishDecryptedResult(requestId, status, sig)
-    Note over Admin,Contract: If NEEDS_REVIEW, admin calls adminReviewRequest(id, approved)
-```
+---
 
 ## Roles
 
-- `Admin`
-  Creates policy packs with encrypted thresholds, registers and manages employees, resolves the review queue, and publishes final outcomes with settlement receipts.
-- `Employee`
-  Submits encrypted spend requests to a policy pack and privately reveals personal results using a permit.
-- `Observer`
-  Reads public metadata, ciphertext handles, and published outcomes without access to confidential values.
+**Admin** — deploys policy packs with encrypted thresholds, registers and manages employee accounts, resolves the Needs-Review queue, and publishes finalised outcomes with settlement receipts.
 
-## Repository Layout
+**Employee** — submits encrypted spend requests against an active policy pack, then privately decrypts their own outcome using a Fhenix permit. No other party can see the decrypted result through this flow.
 
-```text
-contracts/           Solidity contract and interfaces
-scripts/             Deploy, seed, verify, and publish scripts
-test/                Hardhat + mock CoFHE contract tests
-deployments/         Saved deployed addresses by network
-frontend/            Next.js app for landing, admin, employee, and observer views
-brand-assets/        Project logo and wordmark assets
-context.md           Local continuity and release log
-```
+**Observer** — reads public request metadata, ciphertext handles, pack metrics, and published outcomes without requiring a wallet. Amounts and thresholds remain sealed.
+
+---
+
+## Wave 3 Update
+
+Wave 3 is the current production release. The following capabilities were shipped:
+
+**Contract — `ShieldCardPolicyEngine`**
+- New contract deployed on Arbitrum Sepolia replacing the earlier single-threshold version
+- Policy pack architecture: multiple named packs, each with independent encrypted thresholds
+- Three encrypted thresholds per pack: hard limit, auto-approval threshold, rolling budget cap
+- Rolling encrypted budget accumulator — updates homomorphically on every submission
+- Six-state request lifecycle (0–5) as documented above
+- Auto-approve / needs-review / auto-deny three-path FHE routing
+- Admin review queue with explicit approve and deny actions
+- Employee freeze / unfreeze
+- Global pause / unpause
+- Pack active / inactive toggle
+- Budget epoch reset
+- Settlement receipt hashes on every finalised request
+- 80 Hardhat unit tests covering all contract paths
+
+**Frontend — Next.js 14 App Router**
+- Full frontend rebuild around the policy pack model
+- Admin workspace: policy pack manager, encrypted threshold controls, pack metrics dashboard, needs-review queue, employee freeze/unfreeze, global pause toggle
+- Employee workspace: encrypted request submission with explicit phase labels (encrypting → awaiting wallet → submitted → confirming), per-request lifecycle timeline, private reveal with permit, exportable receipt card
+- Observer workspace: public audit surface with pack-level summaries and full request index
+- CoFHE SDK aligned to `@cofhe/sdk ^0.5.2`
+- Netlify production hardening: static chunk cache headers, chunk reload recovery, explicit transaction states, query invalidation after every write
+
+---
+
+## Security and Privacy Model
+
+### What is encrypted
+
+- **Spend amount** — encrypted in-browser by the employee before submission; the contract receives an `InEuint32` ciphertext handle
+- **Hard limit** — set by admin as `euint32`; controls the absolute ceiling for a pack
+- **Auto-approval threshold** — set by admin as `euint32`; controls the boundary between auto-approve and needs-review
+- **Rolling budget cap** — set by admin as `euint32`; limits cumulative epoch spend per pack
+- **Used budget accumulator** — updated homomorphically each submission; never decrypted during normal operation
+- **FHE comparison operands** — intermediate `ebool` values; never stored or exposed
+
+### What is public
+
+- Employee wallet address and pack selection
+- Memo text (submitted plaintext)
+- Submission timestamp
+- Ciphertext handles (`bytes32`) — these are opaque identifiers; no value can be inferred from a handle
+- Published outcome after admin calls `publishDecryptedResult`
+- Settlement receipt hash after finalisation
+
+### What FHE enables
+
+Fhenix CoFHE allows the `ShieldCardPolicyEngine` to perform arithmetic and comparison operations on encrypted integers without decrypting them. The policy evaluation — including budget accumulation and three-tier routing — runs entirely on ciphertext. The Fhenix Threshold Network holds the cryptographic material required for decryption; it performs decryption only when presented with a valid permit or admin signature.
+
+This means the on-chain policy engine enforces spending rules without the contract, block validators, or observers ever having access to the plaintext values those rules operate on.
+
+---
 
 ## Tech Stack
 
-- Solidity `0.8.28`
-- Hardhat
-- `@fhenixprotocol/cofhe-contracts`
-- `@cofhe/sdk`
-- Next.js 14 App Router
-- React 18
-- wagmi + viem
-- Netlify static deployment
-- Arbitrum Sepolia
+| Layer | Technology |
+|---|---|
+| Smart contracts | Solidity 0.8.28, Hardhat |
+| FHE primitives | `@fhenixprotocol/cofhe-contracts ^0.1.3` |
+| FHE SDK | `@cofhe/sdk ^0.5.2`, `@cofhe/hardhat-plugin ^0.5.2` |
+| Frontend | Next.js 14 (App Router, static export) |
+| UI | React 18, Tailwind CSS 4, Framer Motion |
+| Wallet | wagmi v2, viem v2 |
+| Deployment | Netlify |
+| Network | Arbitrum Sepolia |
 
-## Contract Details
+---
 
-- Network: Arbitrum Sepolia
-- Contract: `ShieldCardPolicyEngine`
-- Address: `0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a`
-- Explorer: https://sepolia.arbiscan.io/address/0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a
-- Current admin: `0x94c188F8280cA706949CC030F69e42B5544514ac`
-- Current registered employees:
-  - `0x8df6Dd7B18BD693DD98228D03fEe85424C4293A4`
-  - `0x1D7f7354eDA779D15Ebd258aE92F82D9E1b98028`
-- Policy packs: Travel (1), SaaS (2), Vendor (3), Marketing (4) — all active with encrypted thresholds
-- 3-tier routing:
-  - amount ≤ auto-threshold → `AUTO_APPROVED`
-  - amount > auto-threshold and ≤ hard limit → `NEEDS_REVIEW` (admin queue)
-  - amount > hard limit OR budget cap exhausted → `AUTO_DENIED`
-- Settlement receipts: deterministic `keccak256(requestId, status, timestamp)` stored on-chain after publish
+## Repository Layout
 
-## Privacy Model
+```
+contracts/           ShieldCardPolicyEngine.sol and interfaces
+scripts/             Deploy, seed, publish-results, verify-seed scripts
+test/                Hardhat + mock CoFHE contract tests (80 tests)
+deployments/         Deployed contract addresses by network
+frontend/            Next.js app — landing, admin, employee, observer
+brand-assets/        Logo, wordmark, and diagram assets
+```
 
-Publicly visible:
+---
 
-- employee address
-- memo
-- timestamp
-- ciphertext handles (opaque bytes32 — no value inference)
-- published final outcome after admin publication
-- settlement receipt hash
-
-Kept confidential:
-
-- request amount
-- pack hard limit, auto-threshold, rolling budget cap
-- raw FHE decision before reveal or publication
-- policy comparison inputs and intermediate values
-
-## Reliability Notes
-
-The frontend was hardened for demo usage with:
-
-- explicit `Open MetaMask`, `submitted`, and `confirming` transaction states
-- query invalidation after every write
-- lightweight polling for request views
-- direct injected-wallet connection flow instead of a broader wallet modal stack
-- switch-network recovery controls on admin and employee flows
-
-## Local Setup
+## Local Development
 
 ### 1. Install dependencies
 
@@ -187,32 +239,30 @@ cd frontend && pnpm install
 
 ### 2. Configure environment
 
-Root `.env`:
+Root `.env` (copy from example):
 
 ```bash
 cp .env.example .env
 ```
 
-Frontend `.env.local`:
+Required root variables:
 
-```bash
-cp frontend/.env.example frontend/.env.local
+```
+PRIVATE_KEY=
+EMPLOYEE_A_PRIVATE_KEY=
+EMPLOYEE_B_PRIVATE_KEY=
+ARB_SEPOLIA_RPC_URL=
+ARBISCAN_API_KEY=
 ```
 
-Required root env values:
+Frontend `.env.local`:
 
-- `PRIVATE_KEY`
-- `EMPLOYEE_A_PRIVATE_KEY`
-- `EMPLOYEE_B_PRIVATE_KEY`
-- `ARB_SEPOLIA_RPC_URL`
-- `ARBISCAN_API_KEY`
+```
+NEXT_PUBLIC_SHIELDCARD_ADDRESS=0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a
+NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
+```
 
-Required frontend env values:
-
-- `NEXT_PUBLIC_SHIELDCARD_ADDRESS`
-- `NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL`
-
-### 3. Run contract checks
+### 3. Compile and test
 
 ```bash
 pnpm compile
@@ -226,50 +276,45 @@ cd frontend
 pnpm dev
 ```
 
+---
+
 ## Scripts
 
-Root:
+### Root
 
-- `pnpm compile`
-- `pnpm test`
-- `pnpm arb-sepolia:deploy`
-- `pnpm arb-sepolia:seed-demo`
-- `pnpm arb-sepolia:publish-results`
-- `pnpm arb-sepolia:verify-seed`
+| Script | Purpose |
+|---|---|
+| `pnpm compile` | Compile Solidity contracts |
+| `pnpm test` | Run all 80 Hardhat tests with gas reporting |
+| `pnpm arb-sepolia:deploy` | Deploy `ShieldCardPolicyEngine` to Arbitrum Sepolia |
+| `pnpm arb-sepolia:seed-demo` | Register employees, create packs, set encrypted thresholds |
+| `pnpm arb-sepolia:publish-results` | Publish FHE-decrypted results for pending requests |
+| `pnpm arb-sepolia:verify-seed` | Verify on-chain state matches expected seed data |
 
-Frontend:
+### Frontend
 
-- `pnpm lint`
-- `pnpm build`
-- `pnpm dev`
+| Script | Purpose |
+|---|---|
+| `pnpm dev` | Start Next.js development server |
+| `pnpm build` | Build static export |
+| `pnpm lint` | Run ESLint |
 
-## Demo Flow
+---
 
-Recommended recording path:
+## Deployment
 
-1. Open the landing page and move into `/app`
-2. Connect the admin wallet on Arbitrum Sepolia
-3. Show policy pack manager: active packs with encrypted thresholds, pack summaries
-4. Show employee management: registered employees, freeze/unfreeze controls
-5. Show review queue: in-review request with approve/deny actions
-6. Switch to an employee wallet and submit a new encrypted request
-7. Show the explicit encrypting → awaiting wallet → submitted → confirming states
-8. Reveal the result privately as the employee (permit-based decrypt)
-9. Show the receipt card and JSON export
-10. End on `/observer` to show the public audit trail without exposing confidential inputs
+| Resource | Link |
+|---|---|
+| Live application | https://shieldcard-fhenix.netlify.app |
+| GitHub repository | https://github.com/Vinaystwt/ShieldCard |
+| Contract explorer | https://sepolia.arbiscan.io/address/0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a |
+| Contract address | `0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a` |
+| Network | Arbitrum Sepolia |
 
-## Limitations
+---
 
-- Single-company demo contract
-- No real payment rails or settlement integration
-- No mobile-first WalletConnect path in the present demo configuration
-- Threshold-network latency exists for publish and reveal flows (communicated in UX with explicit phase labels)
-- Budget tracking is per epoch; epoch resets are admin-triggered, not time-based
-
-## Roadmap
-
-- richer encrypted category policy support
-- multi-policy or multi-company configuration
-- better result indexing and filtering for admin operations
-- audit exports and compliance-oriented observer reporting
-- stronger end-to-end browser automation around demo-safe wallet flows
+<div align="center">
+<img src="./brand-assets/shieldcard-logo.svg" alt="ShieldCard" width="48"/>
+<br/><br/>
+<sub>Built for the Fhenix Buildathon · Arbitrum Sepolia · MIT License</sub>
+</div>

@@ -1,0 +1,108 @@
+<svg width="900" height="280" viewBox="0 0 900 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lc-copper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D99550"/>
+      <stop offset="100%" stop-color="#B06B28"/>
+    </linearGradient>
+    <marker id="lc-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4A4A52"/>
+    </marker>
+    <marker id="lc-arrow-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4E9B6A"/>
+    </marker>
+    <marker id="lc-arrow-r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#8B4A4A"/>
+    </marker>
+    <marker id="lc-arrow-y" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#C4943C"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="280" rx="12" fill="#09090B"/>
+  <rect width="900" height="280" rx="12" fill="none" stroke="#1E1E24" stroke-width="1"/>
+
+  <text x="450" y="28" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#4A4A52" letter-spacing="0.08em">REQUEST LIFECYCLE</text>
+
+  <!-- Step 1: Submit -->
+  <rect x="24" y="50" width="120" height="72" rx="7" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <rect x="24" y="50" width="120" height="4" rx="2" fill="#6E90B2" opacity="0.6"/>
+  <text x="84" y="72" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#8BACC8">① Submit</text>
+  <text x="84" y="87" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">encrypt amount</text>
+  <text x="84" y="99" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">in browser</text>
+  <text x="84" y="113" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">→ on-chain calldata</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="145" y1="86" x2="172" y2="86" stroke="#4A4A52" stroke-width="1.2" marker-end="url(#lc-arrow)"/>
+
+  <!-- Step 2: FHE Evaluate -->
+  <rect x="174" y="50" width="140" height="72" rx="7" fill="#0E0E11" stroke="#C8833F" stroke-width="1" opacity="0.7"/>
+  <rect x="174" y="50" width="140" height="4" rx="2" fill="url(#lc-copper)"/>
+  <text x="244" y="72" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#C8833F">② FHE Evaluate</text>
+  <text x="244" y="87" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">3-tier comparison</text>
+  <text x="244" y="99" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">enc amount vs</text>
+  <text x="244" y="111" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">enc thresholds</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="315" y1="86" x2="342" y2="86" stroke="#4A4A52" stroke-width="1.2" marker-end="url(#lc-arrow)"/>
+
+  <!-- Step 3: enc status stored -->
+  <rect x="344" y="50" width="136" height="72" rx="7" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <rect x="344" y="50" width="136" height="4" rx="2" fill="#D99550" opacity="0.5"/>
+  <text x="412" y="72" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#D99550">③ Enc Result</text>
+  <text x="412" y="87" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">encrypted status</text>
+  <text x="412" y="99" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">stored on-chain</text>
+  <text x="412" y="111" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">opaque to public</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="481" y1="86" x2="508" y2="86" stroke="#4A4A52" stroke-width="1.2" marker-end="url(#lc-arrow)"/>
+
+  <!-- Step 4: Admin Publish -->
+  <rect x="510" y="50" width="136" height="72" rx="7" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <rect x="510" y="50" width="136" height="4" rx="2" fill="url(#lc-copper)" opacity="0.5"/>
+  <text x="578" y="72" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#C8833F">④ Admin Publish</text>
+  <text x="578" y="87" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">decrypt + verify</text>
+  <text x="578" y="99" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">publish plainStatus</text>
+  <text x="578" y="111" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">+ signature</text>
+
+  <!-- Arrow 4→outcomes (split) -->
+  <!-- to approved -->
+  <path d="M647 72 C680 72 710 55 740 55" stroke="#4E9B6A" stroke-width="1.2" fill="none" marker-end="url(#lc-arrow-g)"/>
+  <!-- to review -->
+  <line x1="647" y1="86" x2="738" y2="86" stroke="#C4943C" stroke-width="1.2" marker-end="url(#lc-arrow-y)"/>
+  <!-- to denied -->
+  <path d="M647 100 C680 100 710 115 740 115" stroke="#8B4A4A" stroke-width="1.2" fill="none" marker-end="url(#lc-arrow-r)"/>
+
+  <!-- Outcome: Auto Approved -->
+  <rect x="740" y="38" width="136" height="34" rx="6" fill="#0E2210" stroke="#4E9B6A" stroke-width="1" opacity="0.8"/>
+  <text x="808" y="56" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#6BC88A">Auto Approved</text>
+  <text x="808" y="67" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#4E9B6A">amount ≤ auto-threshold</text>
+
+  <!-- Outcome: Needs Review -->
+  <rect x="740" y="72" width="136" height="28" rx="6" fill="#1A120A" stroke="#C4943C" stroke-width="1" opacity="0.8"/>
+  <text x="808" y="88" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#D99550">Needs Review</text>
+
+  <!-- Outcome: Auto Denied -->
+  <rect x="740" y="100" width="136" height="34" rx="6" fill="#1A0A0A" stroke="#8B4A4A" stroke-width="1" opacity="0.8"/>
+  <text x="808" y="118" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#C87070">Auto Denied</text>
+  <text x="808" y="129" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#8B4A4A">amount &gt; hard limit</text>
+
+  <!-- Review → Admin Decision -->
+  <path d="M808 100 C808 150 760 160 700 168" stroke="#C4943C" stroke-width="1" stroke-dasharray="3 2" fill="none"/>
+  <text x="750" y="163" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#C4943C" opacity="0.8">admin action</text>
+
+  <!-- Admin Approved/Denied final -->
+  <rect x="580" y="165" width="120" height="28" rx="6" fill="#0E2210" stroke="#4E9B6A" stroke-width="1" opacity="0.6"/>
+  <text x="640" y="183" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="500" fill="#6BC88A">Admin Approved</text>
+  <rect x="710" y="165" width="120" height="28" rx="6" fill="#1A0A0A" stroke="#8B4A4A" stroke-width="1" opacity="0.6"/>
+  <text x="770" y="183" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="500" fill="#C87070">Admin Denied</text>
+
+  <!-- Settlement receipt -->
+  <rect x="200" y="218" width="500" height="44" rx="7" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <text x="450" y="236" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#C8833F">⑤ Settlement Receipt</text>
+  <text x="450" y="252" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">keccak256(requestId, employee, packId, finalStatus, timestamp, contract, chainId)</text>
+
+  <!-- Final outcomes → receipt -->
+  <line x1="450" y1="193" x2="450" y2="217" stroke="#4A4A52" stroke-width="1" stroke-dasharray="3 2"/>
+  <line x1="640" y1="193" x2="490" y2="217" stroke="#4A4A52" stroke-width="1" stroke-dasharray="3 2"/>
+  <line x1="770" y1="193" x2="510" y2="217" stroke="#4A4A52" stroke-width="1" stroke-dasharray="3 2"/>
+</svg>
