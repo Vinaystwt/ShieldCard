@@ -72,7 +72,18 @@ export function CofheProvider({ children }: { children: ReactNode }) {
           supportedChains: [chain],
         });
         const nextClient = createCofheClient(config) as CofheClient;
-        await nextClient.connect(publicClient, walletClient);
+
+        // Timeout so a slow prover network never freezes the UI forever.
+        const CONNECT_TIMEOUT_MS = 15_000;
+        await Promise.race([
+          nextClient.connect(publicClient, walletClient),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error("CoFHE initialization timed out. Refresh to retry.")),
+              CONNECT_TIMEOUT_MS,
+            ),
+          ),
+        ]);
 
         if (!active) return;
         setClient(nextClient);

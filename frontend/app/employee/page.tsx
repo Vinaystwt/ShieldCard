@@ -202,7 +202,7 @@ export default function EmployeePage() {
           </motion.div>
         )}
 
-        {isConfigured && isEmployee && !isWrongNetwork && !isReady && (
+        {isConfigured && isEmployee && !isWrongNetwork && !isReady && !error && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -215,8 +215,24 @@ export default function EmployeePage() {
           >
             <span className="inline-flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-pending animate-pending" />
-              {error ? getErrorMessage(error) : "Initializing CoFHE encryption client..."}
+              Initializing CoFHE encryption client...
             </span>
+          </motion.div>
+        )}
+
+        {isConfigured && isEmployee && !isWrongNetwork && !isReady && error && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-lg px-4 py-3 text-[13px]"
+            style={{
+              background: "var(--denied-bg)",
+              border: "1px solid rgba(147,68,68,0.20)",
+              color: "var(--color-denied)",
+            }}
+          >
+            <span className="font-medium">Encryption unavailable:</span>{" "}
+            {getErrorMessage(error)} You can still view your past requests below.
           </motion.div>
         )}
 
@@ -296,7 +312,7 @@ export default function EmployeePage() {
                   color: "var(--color-denied)",
                 }}
               >
-                <span>Failed to load requests. Check your RPC connection and refresh.</span>
+                <span>Failed to load your requests. The network may be slow — tap Retry or wait for auto-refresh.</span>
                 <button
                   onClick={() => employeeRequestsQuery.refetch()}
                   className="shrink-0 underline opacity-70 hover:opacity-100"

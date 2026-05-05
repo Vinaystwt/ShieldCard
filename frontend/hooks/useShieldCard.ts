@@ -137,18 +137,29 @@ export function useShieldCard() {
     enabled: Boolean(isConfigured && address),
     staleTime: 5_000,
     refetchInterval: isConfigured && address ? 12_000 : false,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 8_000),
     queryFn: async () => {
-      const ids = await publicClient!.readContract({
-        address: shieldCardAddress!,
+      if (!publicClient || !shieldCardAddress || !address) return [];
+      // Capture narrowed refs so TypeScript doesn't lose them inside async callbacks.
+      const pc = publicClient;
+      const contractAddr = shieldCardAddress;
+      const emp = address;
+
+      const ids = await pc.readContract({
+        address: contractAddr,
         abi: shieldCardAbi,
         functionName: "getEmployeeRequestIds",
-        args: [address!],
+        args: [emp],
       });
 
-      return Promise.all(
+      if (!ids || ids.length === 0) return [];
+
+      // Use allSettled so a single failed getRequest doesn't discard the rest.
+      const settled = await Promise.allSettled(
         ids.map(async (id) => {
-          const raw = await publicClient!.readContract({
-            address: shieldCardAddress!,
+          const raw = await pc.readContract({
+            address: contractAddr,
             abi: shieldCardAbi,
             functionName: "getRequest",
             args: [id],
@@ -170,6 +181,17 @@ export function useShieldCard() {
           return { id, ...req };
         }),
       );
+
+      // Return successful rows; if every single row failed, re-throw so TanStack Query retries.
+      const fulfilled = settled
+        .filter((r): r is PromiseFulfilledResult<{ id: bigint } & RequestView> => r.status === "fulfilled")
+        .map((r) => r.value);
+
+      if (fulfilled.length === 0 && ids.length > 0) {
+        throw new Error("All request rows failed to load.");
+      }
+
+      return fulfilled;
     },
   });
 
