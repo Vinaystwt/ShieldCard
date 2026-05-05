@@ -20,7 +20,7 @@ const ROLE_CARDS = [
     role: "Admin",
     icon: Shield,
     href: "/admin",
-    description: "Manage employees, set encrypted limits, and publish results to the audit trail.",
+    description: "Manage employees, set encrypted policy thresholds, and publish results to the audit trail.",
     color: "copper",
   },
   {

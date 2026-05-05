@@ -5,8 +5,8 @@
 ShieldCard is a confidential corporate spend control app built for the Fhenix Buildathon. It demonstrates how a company can enforce spend-policy logic on-chain without exposing employee request amounts, encrypted per-employee limits, or private policy decisions in public state.
 
 Live demo: https://shieldcard-fhenix.netlify.app  
-Contract: `0x536b31435bFAE994169181AcA9BAadC784555b4B` on Arbitrum Sepolia  
-Explorer: https://sepolia.arbiscan.io/address/0x536b31435bFAE994169181AcA9BAadC784555b4B
+Contract: `0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a` on Arbitrum Sepolia  
+Explorer: https://sepolia.arbiscan.io/address/0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a
 
 ## Problem
 
@@ -14,33 +14,35 @@ Most on-chain treasury tools are transparent by default. That is useful for audi
 
 ShieldCard keeps those inputs encrypted while still allowing the policy engine to evaluate:
 
-- whether a request amount is within an employee's encrypted limit
-- whether the request category matches the allowed policy category
-- whether the final result should be approved or denied
+- whether a request amount is within the encrypted hard limit for its policy pack
+- whether the amount falls below the auto-approval threshold or requires admin review
+- whether the rolling budget cap for the period has been reached
+- what the final outcome should be: auto-approved, auto-denied, or escalated for review
 
 ## What ShieldCard Does
 
-- Admin registers employees on-chain
-- Admin stores encrypted employee limits
-- Employee encrypts amount and category locally before submission
-- Contract evaluates policy privately with FHE operations
-- Employee can privately reveal their own result with a permit
-- Admin can publish the final plain-text outcome to the public audit trail
-- Observer sees only public metadata, ciphertext handles, and published outcomes
+- Admin creates policy packs (Travel, SaaS, Vendor, Marketing) with encrypted thresholds
+- Admin registers employees and can freeze or unfreeze individual accounts
+- Employee encrypts their spend amount locally and submits to a policy pack
+- Contract evaluates the policy privately using FHE: auto-approves, auto-denies, or escalates to admin review
+- Employee can privately reveal their own outcome using a permit-based decrypt
+- Admin resolves review-queue items and publishes final outcomes with settlement receipts
+- Observer sees only public metadata, ciphertext handles, and published outcomes — amounts and thresholds remain sealed
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    E[Employee Browser] -->|Encrypt amount + category| C[ShieldCard Frontend]
-    C -->|submitRequest| P[ShieldCardPolicy.sol]
-    A[Admin Browser] -->|Encrypt limit| C
-    C -->|setEmployeeLimit| P
-    P -->|FHE policy evaluation| F[Fhenix CoFHE / Threshold Network]
+    E[Employee Browser] -->|Encrypt amount locally| C[ShieldCard Frontend]
+    C -->|submitRequest| P[ShieldCardPolicyEngine.sol]
+    A[Admin Browser] -->|Encrypt pack thresholds| C
+    C -->|setPolicyThresholds| P
+    P -->|FHE 3-tier evaluation| F[Fhenix CoFHE / Threshold Network]
     F -->|encrypted result handle| P
     E -->|permit-based decrypt| F
     A -->|decrypt for tx + publish| F
     A -->|publishDecryptedResult| P
+    A -->|adminReviewRequest| P
     O[Observer] -->|public reads only| P
 ```
 
@@ -62,11 +64,12 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    Admin -->|register employee| Contract
-    Admin -->|set encrypted limit| Contract
-    Employee -->|submit encrypted request| Contract
+    Admin -->|register / freeze employee| Contract
+    Admin -->|set encrypted pack thresholds| Contract
+    Admin -->|adminReviewRequest| Contract
+    Admin -->|publishDecryptedResult| Contract
+    Employee -->|submitRequest with encrypted amount| Contract
     Employee -->|private reveal via permit| Threshold[Threshold Network]
-    Admin -->|publish decrypted result| Contract
     Observer -->|read public request metadata| Contract
 ```
 
@@ -80,28 +83,29 @@ sequenceDiagram
     participant Contract
     participant TN as Threshold Network
 
-    Admin->>Frontend: Encrypt employee limit
-    Frontend->>Contract: setEmployeeLimit(encLimit)
-    Employee->>Frontend: Enter amount, category, memo
-    Frontend->>Frontend: Encrypt amount + category locally
-    Frontend->>Contract: submitRequest(encAmount, encCategory, memo)
-    Contract->>Contract: FHE policy evaluation
-    Contract-->>Employee: Encrypted status handle available
+    Admin->>Frontend: Encrypt hard limit, auto-threshold, budget
+    Frontend->>Contract: setPolicyThresholds(packId, encHard, encAuto, encBudget)
+    Employee->>Frontend: Enter amount, pack, memo
+    Frontend->>Frontend: Encrypt amount locally
+    Frontend->>Contract: submitRequest(packId, encAmount, memo)
+    Contract->>TN: FHE: compare amount vs thresholds
+    TN-->>Contract: Encrypted status (AUTO_APPROVED / NEEDS_REVIEW / AUTO_DENIED)
     Employee->>TN: Reveal with permit
-    TN-->>Employee: Private approved / denied result
+    TN-->>Employee: Private outcome + label
     Admin->>TN: Decrypt for transaction
     TN-->>Admin: Plain status + signature
-    Admin->>Contract: publishDecryptedResult(status, sig)
+    Admin->>Contract: publishDecryptedResult(requestId, status, sig)
+    Note over Admin,Contract: If NEEDS_REVIEW, admin calls adminReviewRequest(id, approved)
 ```
 
 ## Roles
 
 - `Admin`
-  Registers employees, stores encrypted limits, and publishes final outcomes.
+  Creates policy packs with encrypted thresholds, registers and manages employees, resolves the review queue, and publishes final outcomes with settlement receipts.
 - `Employee`
-  Submits encrypted requests and privately reveals personal results.
+  Submits encrypted spend requests to a policy pack and privately reveals personal results using a permit.
 - `Observer`
-  Reads public metadata and published outcomes without access to confidential values.
+  Reads public metadata, ciphertext handles, and published outcomes without access to confidential values.
 
 ## Repository Layout
 
@@ -130,15 +134,19 @@ context.md           Local continuity and release log
 ## Contract Details
 
 - Network: Arbitrum Sepolia
-- Contract: `ShieldCardPolicy`
-- Address: `0x536b31435bFAE994169181AcA9BAadC784555b4B`
+- Contract: `ShieldCardPolicyEngine`
+- Address: `0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a`
+- Explorer: https://sepolia.arbiscan.io/address/0xaa4CDf8ad483445eD77e2a3F772e96A2E10ACC5a
 - Current admin: `0x94c188F8280cA706949CC030F69e42B5544514ac`
 - Current registered employees:
   - `0x8df6Dd7B18BD693DD98228D03fEe85424C4293A4`
   - `0x1D7f7354eDA779D15Ebd258aE92F82D9E1b98028`
-- Policy model:
-  - amount must be less than or equal to the employee's encrypted limit
-  - category must equal the allowed category id `1`
+- Policy packs: Travel (1), SaaS (2), Vendor (3), Marketing (4) — all active with encrypted thresholds
+- 3-tier routing:
+  - amount ≤ auto-threshold → `AUTO_APPROVED`
+  - amount > auto-threshold and ≤ hard limit → `NEEDS_REVIEW` (admin queue)
+  - amount > hard limit OR budget cap exhausted → `AUTO_DENIED`
+- Settlement receipts: deterministic `keccak256(requestId, status, timestamp)` stored on-chain after publish
 
 ## Privacy Model
 
@@ -147,16 +155,16 @@ Publicly visible:
 - employee address
 - memo
 - timestamp
-- ciphertext handles
+- ciphertext handles (opaque bytes32 — no value inference)
 - published final outcome after admin publication
+- settlement receipt hash
 
 Kept confidential:
 
 - request amount
-- request category meaningfully interpreted in policy evaluation
-- employee spend limit
-- raw decision before reveal/publication
-- policy comparison inputs
+- pack hard limit, auto-threshold, rolling budget cap
+- raw FHE decision before reveal or publication
+- policy comparison inputs and intermediate values
 
 ## Reliability Notes
 
@@ -241,20 +249,22 @@ Recommended recording path:
 
 1. Open the landing page and move into `/app`
 2. Connect the admin wallet on Arbitrum Sepolia
-3. Show employee registration and encrypted limit setup
-4. Switch to an employee wallet and submit a request
-5. Show the explicit wallet/confirmation states resolving
-6. Reveal the result privately as the employee
-7. Switch back to the admin wallet and publish the outcome
-8. End on `/observer` to show the public audit trail without exposing the confidential inputs
+3. Show policy pack manager: active packs with encrypted thresholds, pack summaries
+4. Show employee management: registered employees, freeze/unfreeze controls
+5. Show review queue: in-review request with approve/deny actions
+6. Switch to an employee wallet and submit a new encrypted request
+7. Show the explicit encrypting → awaiting wallet → submitted → confirming states
+8. Reveal the result privately as the employee (permit-based decrypt)
+9. Show the receipt card and JSON export
+10. End on `/observer` to show the public audit trail without exposing confidential inputs
 
 ## Limitations
 
 - Single-company demo contract
-- Fixed allowed category model in the current MVP
 - No real payment rails or settlement integration
 - No mobile-first WalletConnect path in the present demo configuration
-- Threshold-network latency still exists for publish/reveal flows and must be communicated in UX
+- Threshold-network latency exists for publish and reveal flows (communicated in UX with explicit phase labels)
+- Budget tracking is per epoch; epoch resets are admin-triggered, not time-based
 
 ## Roadmap
 
