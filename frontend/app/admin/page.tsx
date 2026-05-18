@@ -11,6 +11,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { RequestStream } from "@/components/admin/RequestStream";
 import { EmployeeManagement } from "@/components/admin/EmployeeManagement";
 import { PolicyPackManager } from "@/components/admin/PolicyPackManager";
+import { VendorPanel } from "@/components/observer/VendorPanel";
 import { SwitchNetworkButton } from "@/components/ui/SwitchNetworkButton";
 import { useCofhe } from "@/hooks/useCofhe";
 import { useRoleRouting } from "@/hooks/useRoleRouting";
@@ -35,6 +36,8 @@ export default function AdminPage() {
     resetBudgetEpoch,
     requestsQuery,
     packsQuery,
+    deptsQuery,
+    vendorsQuery,
     globalStateQuery,
     publishResult,
     adminReviewRequest,
@@ -176,7 +179,7 @@ export default function AdminPage() {
                 </button>
               )}
               <button
-                onClick={() => { requestsQuery.refetch(); packsQuery.refetch(); globalStateQuery.refetch(); }}
+                onClick={() => { requestsQuery.refetch(); packsQuery.refetch(); globalStateQuery.refetch(); vendorsQuery.refetch(); deptsQuery.refetch(); }}
                 className="flex items-center gap-2 px-4 py-2 rounded-md text-[13px] transition-colors"
                 style={{ border: "1px solid var(--border-dim)", background: "#0E0E11", color: "var(--color-muted)" }}
               >
@@ -269,6 +272,23 @@ export default function AdminPage() {
             canManage={canCofheActions}
             disabledReason={cofheDisabledReason}
           />
+        </motion.div>
+
+        {/* Vendor compliance panel */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.19 }}
+          className="mb-6 rounded-xl p-5"
+          style={{ background: "#0E0E11", border: "1px solid var(--border-dim)" }}>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.09em]" style={{ color: "var(--color-subtle)" }}>
+              Vendor registry
+            </p>
+            {vendorsQuery.data && (
+              <span className="text-[11px]" style={{ color: "var(--color-subtle)" }}>
+                {vendorsQuery.data.length} registered
+              </span>
+            )}
+          </div>
+          <VendorPanel vendors={vendorsQuery.data ?? []} isLoading={vendorsQuery.isLoading} />
         </motion.div>
 
         {/* Review queue — highlight if any */}

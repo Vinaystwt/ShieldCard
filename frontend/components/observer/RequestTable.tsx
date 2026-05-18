@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FileX } from "lucide-react";
 import { SealedValue } from "@/components/ui/SealedValue";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { RiskBadge } from "@/components/ui/RiskBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatTimestamp, truncateAddress } from "@/lib/format";
 import { PACK_NAME } from "@/lib/contracts";
@@ -29,7 +30,7 @@ export function RequestTable({ requests }: RequestTableProps) {
       <table className="w-full text-[13px]">
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border-dim)" }}>
-            {["#", "Employee", "Pack", "Encrypted Amount", "Memo", "Time", "Status"].map(
+            {["#", "Employee", "Pack", "Dept", "Encrypted Amount", "Memo", "Time", "Risk", "Status"].map(
               (col) => (
                 <th
                   key={col}
@@ -73,13 +74,21 @@ export function RequestTable({ requests }: RequestTableProps) {
                   </span>
                 </td>
                 <td className="py-3.5 pr-4">
+                  <span className="text-[12px]" style={{ color: "var(--color-subtle)" }}>
+                    {req.deptId > 0 ? `Dept #${req.deptId}` : "—"}
+                  </span>
+                </td>
+                <td className="py-3.5 pr-4">
                   <SealedValue handle={req.encAmount} />
                 </td>
                 <td className="py-3.5 pr-4">
-                  <span className="text-muted max-w-[180px] block truncate">{req.memo}</span>
+                  <span className="text-muted max-w-[160px] block truncate">{req.memo}</span>
                 </td>
                 <td className="py-3.5 pr-4">
                   <span className="text-subtle">{formatTimestamp(req.timestamp)}</span>
+                </td>
+                <td className="py-3.5 pr-4">
+                  <RiskBadge bitmap={req.riskBitmap} compact />
                 </td>
                 <td className="py-3.5">
                   <StatusBadge status={req.publicStatus} published={req.resultPublished} inReview={req.inReview} />

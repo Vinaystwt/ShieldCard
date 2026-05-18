@@ -7,11 +7,12 @@ import { Eye, RefreshCw } from "lucide-react";
 import { TopBar } from "@/components/shell/TopBar";
 import { RequestTable } from "@/components/observer/RequestTable";
 import { PackSummary } from "@/components/observer/PackSummary";
+import { VendorPanel } from "@/components/observer/VendorPanel";
 import { PrivacyExplainer } from "@/components/observer/PrivacyExplainer";
 import { useShieldCard } from "@/hooks/useShieldCard";
 
 export default function ObserverPage() {
-  const { isConfigured, requestsQuery, packsQuery } = useShieldCard();
+  const { isConfigured, requestsQuery, packsQuery, deptsQuery, vendorsQuery } = useShieldCard();
 
   return (
     <div className="min-h-screen bg-base">
@@ -61,6 +62,7 @@ export default function ObserverPage() {
               onClick={() => {
                 requestsQuery.refetch();
                 packsQuery.refetch();
+                vendorsQuery.refetch();
               }}
               className="flex items-center gap-2 px-4 py-2 rounded-md text-[13px] transition-colors"
               style={{
@@ -97,11 +99,71 @@ export default function ObserverPage() {
           />
         </motion.div>
 
+        {/* Vendor compliance */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.10 }}
+          className="mb-6 rounded-xl p-5"
+          style={{ background: "#0E0E11", border: "1px solid var(--border-dim)" }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <p
+              className="text-[11px] font-medium uppercase tracking-[0.09em]"
+              style={{ color: "var(--color-subtle)" }}
+            >
+              Vendor registry
+            </p>
+            {vendorsQuery.data && (
+              <span className="text-[11px]" style={{ color: "var(--color-subtle)" }}>
+                {vendorsQuery.data.length} registered
+              </span>
+            )}
+          </div>
+          <VendorPanel
+            vendors={vendorsQuery.data ?? []}
+            isLoading={vendorsQuery.isLoading}
+          />
+        </motion.div>
+
+        {/* Dept summary */}
+        {(deptsQuery.data?.length ?? 0) > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.13 }}
+            className="mb-6 rounded-xl p-5"
+            style={{ background: "#0E0E11", border: "1px solid var(--border-dim)" }}
+          >
+            <p
+              className="text-[11px] font-medium uppercase tracking-[0.09em] mb-4"
+              style={{ color: "var(--color-subtle)" }}
+            >
+              Departments
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {deptsQuery.data!.map((d) => (
+                <span
+                  key={d.id}
+                  className="rounded-lg px-3 py-1.5 text-[12px] font-medium"
+                  style={{
+                    background: "rgba(110,144,178,0.06)",
+                    border: "1px solid var(--steel-border)",
+                    color: "var(--color-steel)",
+                  }}
+                >
+                  #{d.id} {d.name}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Privacy explainer */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.12 }}
+          transition={{ duration: 0.4, delay: 0.16 }}
           className="mb-6"
         >
           <PrivacyExplainer />
@@ -111,7 +173,7 @@ export default function ObserverPage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
+          transition={{ duration: 0.4, delay: 0.22 }}
           className="rounded-xl p-6"
           style={{ background: "#0E0E11", border: "1px solid var(--border-dim)" }}
         >

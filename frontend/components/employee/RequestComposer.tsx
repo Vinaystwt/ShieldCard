@@ -6,16 +6,19 @@ import { Send, Lock, AlertCircle, CheckCircle } from "lucide-react";
 
 import { TransactionStatus } from "@/hooks/useShieldCard";
 import { POLICY_PACKS } from "@/lib/contracts";
+import type { DeptInfo, VendorInfo } from "@/lib/contracts";
 import { cn, getErrorMessage } from "@/lib/format";
 
 interface RequestComposerProps {
   onSubmit: (
-    input: { amount: number; packId: number; memo: string },
+    input: { amount: number; packId: number; deptId: number; vendorId: number; memo: string },
     onStatusChange: (status: TransactionStatus) => void,
   ) => Promise<void>;
   isBusy: boolean;
   isEmployee: boolean;
   disabledReason?: string;
+  depts?: DeptInfo[];
+  vendors?: VendorInfo[];
 }
 
 type Phase =
@@ -70,9 +73,13 @@ export function RequestComposer({
   isBusy,
   isEmployee,
   disabledReason,
+  depts = [],
+  vendors = [],
 }: RequestComposerProps) {
   const [amount, setAmount] = useState("");
   const [packId, setPackId] = useState<number>(POLICY_PACKS[0].id);
+  const [deptId, setDeptId] = useState<number>(0);
+  const [vendorId, setVendorId] = useState<number>(0);
   const [memo, setMemo] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -89,7 +96,7 @@ export function RequestComposer({
       try {
         setPhase("preparing");
         await onSubmit(
-          { amount: parseFloat(amount), packId, memo },
+          { amount: parseFloat(amount), packId, deptId, vendorId, memo },
           (status) => {
             if (status.phase === "preparing") setPhase("preparing");
             if (status.phase === "awaiting_wallet") setPhase("awaiting_wallet");
@@ -118,6 +125,13 @@ export function RequestComposer({
   const isDone = phase === "done";
   const isInProgress =
     isScrambling || isPreparing || isAwaitingWallet || isSubmitted || isConfirming;
+
+  const selectStyle = {
+    background: "var(--color-raised)",
+    border: "1px solid var(--border-dim)",
+    outline: "none",
+    appearance: "none" as const,
+  };
 
   return (
     <motion.div
@@ -204,12 +218,7 @@ export function RequestComposer({
             onChange={(e) => setPackId(parseInt(e.target.value, 10))}
             disabled={isInProgress || isDone}
             className="w-full rounded-md px-3 py-2.5 text-[14px] text-text"
-            style={{
-              background: "var(--color-raised)",
-              border: "1px solid var(--border-dim)",
-              outline: "none",
-              appearance: "none",
-            }}
+            style={selectStyle}
           >
             {POLICY_PACKS.map((p) => (
               <option key={p.id} value={p.id}>
@@ -218,6 +227,52 @@ export function RequestComposer({
             ))}
           </select>
         </div>
+
+        {/* Department (optional) */}
+        {depts.length > 0 && (
+          <div>
+            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle">
+              Department <span className="normal-case opacity-50">(optional)</span>
+            </label>
+            <select
+              value={deptId}
+              onChange={(e) => setDeptId(parseInt(e.target.value, 10))}
+              disabled={isInProgress || isDone}
+              className="w-full rounded-md px-3 py-2.5 text-[14px] text-text"
+              style={selectStyle}
+            >
+              <option value={0}>— None —</option>
+              {depts.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Vendor (optional) */}
+        {vendors.length > 0 && (
+          <div>
+            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.07em] text-subtle">
+              Vendor <span className="normal-case opacity-50">(optional)</span>
+            </label>
+            <select
+              value={vendorId}
+              onChange={(e) => setVendorId(parseInt(e.target.value, 10))}
+              disabled={isInProgress || isDone}
+              className="w-full rounded-md px-3 py-2.5 text-[14px] text-text"
+              style={selectStyle}
+            >
+              <option value={0}>— None —</option>
+              {vendors.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Memo */}
         <div>

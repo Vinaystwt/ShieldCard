@@ -6,15 +6,15 @@
 		"test": "REPORT_GAS=true hardhat test",
 		"clean": "rimraf ./artifacts ./cache ./coverage ./types ./coverage.json ./deployments/localcofhe",
 		"compile": "hardhat compile",
-		"shieldcard:deploy": "hardhat run scripts/deploy.ts",
-		"shieldcard:seed-demo": "hardhat run scripts/seed-demo.ts",
-		"arb-sepolia:deploy": "hardhat run scripts/deploy.ts --network arb-sepolia",
-		"arb-sepolia:seed-demo": "hardhat run scripts/seed-demo.ts --network arb-sepolia",
+		"shieldcard:deploy": "hardhat run scripts/deploy-control-plane.ts",
+		"shieldcard:seed-demo": "hardhat run scripts/seed-control-plane.ts",
+		"arb-sepolia:deploy": "hardhat run scripts/deploy-control-plane.ts --network arb-sepolia",
+		"arb-sepolia:seed-demo": "hardhat run scripts/seed-control-plane.ts --network arb-sepolia",
 		"arb-sepolia:publish-results": "hardhat run scripts/publish-results.ts --network arb-sepolia",
 		"arb-sepolia:verify-seed": "hardhat run scripts/verify-seed.ts --network arb-sepolia",
-		"arbitrumSepolia:deploy": "hardhat run scripts/deploy.ts --network arbitrumSepolia",
-		"arbitrumSepolia:seed-demo": "hardhat run scripts/seed-demo.ts --network arbitrumSepolia",
-		"base-sepolia:deploy": "hardhat run scripts/deploy.ts --network base-sepolia"
+		"arbitrumSepolia:deploy": "hardhat run scripts/deploy-control-plane.ts --network arbitrumSepolia",
+		"arbitrumSepolia:seed-demo": "hardhat run scripts/seed-control-plane.ts --network arbitrumSepolia",
+		"base-sepolia:deploy": "hardhat run scripts/deploy-control-plane.ts --network base-sepolia"
 	},
 	"repository": {
 		"type": "git",

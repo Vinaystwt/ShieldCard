@@ -5,10 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 
 import {
+  DeptInfo,
   PackInfo,
   PackSummary,
-  POLICY_PACKS,
   RequestView,
+  VendorInfo,
   shieldCardAbi,
   shieldCardAddress,
   targetChain,
@@ -112,17 +113,24 @@ export function useShieldCard() {
             args: [BigInt(index)],
           }) as readonly unknown[];
 
+          // getRequest returns 13 fields (Wave 4):
+          // [0]employee [1]packId [2]deptId [3]vendorId [4]encAmount [5]encStatus
+          // [6]memo [7]timestamp [8]resultPublished [9]publicStatus [10]inReview
+          // [11]receiptHash [12]riskBitmap
           const req: RequestView = {
-            employee:        raw[0] as `0x${string}`,
-            packId:          raw[1] as number,
-            encAmount:       raw[2] as `0x${string}`,
-            encStatus:       raw[3] as `0x${string}`,
-            memo:            raw[4] as string,
-            timestamp:       raw[5] as bigint,
-            resultPublished: raw[6] as boolean,
-            publicStatus:    raw[7] as number,
-            inReview:        raw[8] as boolean,
-            receiptHash:     raw[9] as `0x${string}`,
+            employee:        raw[0]  as `0x${string}`,
+            packId:          Number(raw[1]),
+            deptId:          Number(raw[2]),
+            vendorId:        Number(raw[3]),
+            encAmount:       raw[4]  as `0x${string}`,
+            encStatus:       raw[5]  as `0x${string}`,
+            memo:            raw[6]  as string,
+            timestamp:       raw[7]  as bigint,
+            resultPublished: raw[8]  as boolean,
+            publicStatus:    Number(raw[9]),
+            inReview:        raw[10] as boolean,
+            receiptHash:     raw[11] as `0x${string}`,
+            riskBitmap:      Number(raw[12]),
           };
 
           return { id: BigInt(index), ...req };
@@ -141,7 +149,6 @@ export function useShieldCard() {
     retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 8_000),
     queryFn: async () => {
       if (!publicClient || !shieldCardAddress || !address) return [];
-      // Capture narrowed refs so TypeScript doesn't lose them inside async callbacks.
       const pc = publicClient;
       const contractAddr = shieldCardAddress;
       const emp = address;
@@ -155,7 +162,6 @@ export function useShieldCard() {
 
       if (!ids || ids.length === 0) return [];
 
-      // Use allSettled so a single failed getRequest doesn't discard the rest.
       const settled = await Promise.allSettled(
         ids.map(async (id) => {
           const raw = await pc.readContract({
@@ -166,23 +172,25 @@ export function useShieldCard() {
           }) as readonly unknown[];
 
           const req: RequestView = {
-            employee:        raw[0] as `0x${string}`,
-            packId:          raw[1] as number,
-            encAmount:       raw[2] as `0x${string}`,
-            encStatus:       raw[3] as `0x${string}`,
-            memo:            raw[4] as string,
-            timestamp:       raw[5] as bigint,
-            resultPublished: raw[6] as boolean,
-            publicStatus:    raw[7] as number,
-            inReview:        raw[8] as boolean,
-            receiptHash:     raw[9] as `0x${string}`,
+            employee:        raw[0]  as `0x${string}`,
+            packId:          Number(raw[1]),
+            deptId:          Number(raw[2]),
+            vendorId:        Number(raw[3]),
+            encAmount:       raw[4]  as `0x${string}`,
+            encStatus:       raw[5]  as `0x${string}`,
+            memo:            raw[6]  as string,
+            timestamp:       raw[7]  as bigint,
+            resultPublished: raw[8]  as boolean,
+            publicStatus:    Number(raw[9]),
+            inReview:        raw[10] as boolean,
+            receiptHash:     raw[11] as `0x${string}`,
+            riskBitmap:      Number(raw[12]),
           };
 
           return { id, ...req };
         }),
       );
 
-      // Return successful rows; if every single row failed, re-throw so TanStack Query retries.
       const fulfilled = settled
         .filter((r): r is PromiseFulfilledResult<{ id: bigint } & RequestView> => r.status === "fulfilled")
         .map((r) => r.value);
@@ -195,31 +203,37 @@ export function useShieldCard() {
     },
   });
 
-  // ── Packs query ────────────────────────────────────────────────────────────
+  // ── Packs query — dynamic discovery via getPackIds() ──────────────────────
   const packsQuery = useQuery({
     queryKey: ["shieldcard-packs", shieldCardAddress, targetChain.id],
     enabled: isConfigured,
     staleTime: 10_000,
     refetchInterval: isConfigured ? 30_000 : false,
     queryFn: async () => {
+      const packIds = await publicClient!.readContract({
+        address: shieldCardAddress!,
+        abi: shieldCardAbi,
+        functionName: "getPackIds",
+      }) as readonly number[];
+
       return Promise.all(
-        POLICY_PACKS.map(async (p) => {
+        packIds.map(async (packId) => {
           const [name, active, limitsSet, epochStart] = (await publicClient!.readContract({
             address: shieldCardAddress!,
             abi: shieldCardAbi,
             functionName: "getPackInfo",
-            args: [p.id],
+            args: [packId],
           })) as [string, boolean, boolean, bigint];
 
           const [total, approved, denied, pending, inReview] = (await publicClient!.readContract({
             address: shieldCardAddress!,
             abi: shieldCardAbi,
             functionName: "getPackSummary",
-            args: [p.id],
+            args: [packId],
           })) as [bigint, bigint, bigint, bigint, bigint];
 
           return {
-            id: p.id,
+            id: Number(packId),
             name,
             active,
             limitsSet,
@@ -232,6 +246,83 @@ export function useShieldCard() {
           } satisfies PackInfo & PackSummary & { id: number };
         }),
       );
+    },
+  });
+
+  // ── Departments query ──────────────────────────────────────────────────────
+  const deptsQuery = useQuery({
+    queryKey: ["shieldcard-depts", shieldCardAddress, targetChain.id],
+    enabled: isConfigured,
+    staleTime: 15_000,
+    refetchInterval: isConfigured ? 30_000 : false,
+    queryFn: async () => {
+      const deptIds = await publicClient!.readContract({
+        address: shieldCardAddress!,
+        abi: shieldCardAbi,
+        functionName: "getDeptIds",
+      }) as readonly number[];
+
+      return Promise.all(
+        deptIds.map(async (deptId) => {
+          const [name, active, budgetSet, epochStart] = (await publicClient!.readContract({
+            address: shieldCardAddress!,
+            abi: shieldCardAbi,
+            functionName: "getDeptInfo",
+            args: [deptId],
+          })) as [string, boolean, boolean, bigint];
+
+          return {
+            id: Number(deptId),
+            name,
+            active,
+            budgetSet,
+            epochStart,
+          } satisfies DeptInfo;
+        }),
+      );
+    },
+  });
+
+  // ── Vendors query ──────────────────────────────────────────────────────────
+  const vendorsQuery = useQuery({
+    queryKey: ["shieldcard-vendors", shieldCardAddress, targetChain.id],
+    enabled: isConfigured,
+    staleTime: 15_000,
+    refetchInterval: isConfigured ? 30_000 : false,
+    queryFn: async () => {
+      const count = Number(await publicClient!.readContract({
+        address: shieldCardAddress!,
+        abi: shieldCardAbi,
+        functionName: "vendorCount",
+      }));
+
+      if (count === 0) return [];
+
+      // Vendors are indexed 1..count
+      return Promise.all(
+        Array.from({ length: count }, (_, i) => i + 1).map(async (vendorId) => {
+          const exists = await publicClient!.readContract({
+            address: shieldCardAddress!,
+            abi: shieldCardAbi,
+            functionName: "vendorExists",
+            args: [vendorId],
+          });
+          if (!exists) return null;
+
+          const [name, status] = (await publicClient!.readContract({
+            address: shieldCardAddress!,
+            abi: shieldCardAbi,
+            functionName: "getVendorInfo",
+            args: [vendorId],
+          })) as [string, number];
+
+          return {
+            id: vendorId,
+            name,
+            status: Number(status),
+          } satisfies VendorInfo;
+        }),
+      ).then((rows) => rows.filter((v): v is VendorInfo => v !== null));
     },
   });
 
@@ -262,21 +353,23 @@ export function useShieldCard() {
   const summary = useMemo(() => {
     const requests = requestsQuery.data ?? [];
     return {
-      total:    requests.length,
+      total:     requests.length,
       published: requests.filter((r) => r.resultPublished).length,
-      pending:  requests.filter((r) => !r.resultPublished && !r.inReview).length,
-      inReview: requests.filter((r) => r.inReview).length,
+      pending:   requests.filter((r) => !r.resultPublished && !r.inReview).length,
+      inReview:  requests.filter((r) => r.inReview).length,
     };
   }, [requestsQuery.data]);
 
   // ── Refresh all ────────────────────────────────────────────────────────────
   async function refreshQueries() {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["shieldcard-role",             shieldCardAddress, targetChain.id] }),
-      queryClient.invalidateQueries({ queryKey: ["shieldcard-requests",         shieldCardAddress, targetChain.id] }),
-      queryClient.invalidateQueries({ queryKey: ["shieldcard-employee-requests",shieldCardAddress, targetChain.id] }),
-      queryClient.invalidateQueries({ queryKey: ["shieldcard-packs",            shieldCardAddress, targetChain.id] }),
-      queryClient.invalidateQueries({ queryKey: ["shieldcard-global",           shieldCardAddress, targetChain.id] }),
+      queryClient.invalidateQueries({ queryKey: ["shieldcard-role",              shieldCardAddress, targetChain.id] }),
+      queryClient.invalidateQueries({ queryKey: ["shieldcard-requests",          shieldCardAddress, targetChain.id] }),
+      queryClient.invalidateQueries({ queryKey: ["shieldcard-employee-requests", shieldCardAddress, targetChain.id] }),
+      queryClient.invalidateQueries({ queryKey: ["shieldcard-packs",             shieldCardAddress, targetChain.id] }),
+      queryClient.invalidateQueries({ queryKey: ["shieldcard-depts",             shieldCardAddress, targetChain.id] }),
+      queryClient.invalidateQueries({ queryKey: ["shieldcard-vendors",           shieldCardAddress, targetChain.id] }),
+      queryClient.invalidateQueries({ queryKey: ["shieldcard-global",            shieldCardAddress, targetChain.id] }),
     ]);
   }
 
@@ -368,6 +461,9 @@ export function useShieldCard() {
   const unfreezeEmployee    = (emp: `0x${string}`, cb?: TransactionReporter) =>
     runWrite({ functionName: "unfreezeEmployee", args: [emp], onStatusChange: cb });
 
+  const assignEmployeeDept  = (emp: `0x${string}`, deptId: number, cb?: TransactionReporter) =>
+    runWrite({ functionName: "assignEmployeeDept", args: [emp, deptId], onStatusChange: cb });
+
   const pauseSubmissions    = (cb?: TransactionReporter) =>
     runWrite({ functionName: "pauseSubmissions", args: [], onStatusChange: cb });
 
@@ -383,11 +479,43 @@ export function useShieldCard() {
   const setPackActive       = (packId: number, active: boolean, cb?: TransactionReporter) =>
     runWrite({ functionName: "setPackActive", args: [packId, active], onStatusChange: cb });
 
+  const setPackRecurringInterval = (packId: number, intervalSeconds: bigint, cb?: TransactionReporter) =>
+    runWrite({ functionName: "setPackRecurringInterval", args: [packId, intervalSeconds], onStatusChange: cb });
+
   const resetBudgetEpoch    = (packId: number, cb?: TransactionReporter) =>
     runWrite({ functionName: "resetBudgetEpoch", args: [packId], onStatusChange: cb });
 
-  const submitRequest       = (packId: number, encAmount: unknown, memo: string, cb?: TransactionReporter) =>
-    runWrite({ functionName: "submitRequest", args: [packId, encAmount, memo], onStatusChange: cb });
+  const createDept          = (deptId: number, name: string, cb?: TransactionReporter) =>
+    runWrite({ functionName: "createDept", args: [deptId, name], onStatusChange: cb });
+
+  const setDeptActive       = (deptId: number, active: boolean, cb?: TransactionReporter) =>
+    runWrite({ functionName: "setDeptActive", args: [deptId, active], onStatusChange: cb });
+
+  const setDeptBudget       = (deptId: number, encCap: unknown, cb?: TransactionReporter) =>
+    runWrite({ functionName: "setDeptBudget", args: [deptId, encCap], onStatusChange: cb });
+
+  const resetDeptEpoch      = (deptId: number, cb?: TransactionReporter) =>
+    runWrite({ functionName: "resetDeptEpoch", args: [deptId], onStatusChange: cb });
+
+  const registerVendor      = (vendorId: number, name: string, cb?: TransactionReporter) =>
+    runWrite({ functionName: "registerVendor", args: [vendorId, name], onStatusChange: cb });
+
+  const setVendorStatus     = (vendorId: number, status: number, cb?: TransactionReporter) =>
+    runWrite({ functionName: "setVendorStatus", args: [vendorId, status], onStatusChange: cb });
+
+  // Wave 4: extended submitRequest with deptId and vendorId
+  const submitRequest       = (
+    packId: number,
+    deptId: number,
+    vendorId: number,
+    encAmount: unknown,
+    memo: string,
+    cb?: TransactionReporter,
+  ) =>
+    runWrite({ functionName: "submitRequest", args: [packId, deptId, vendorId, encAmount, memo], onStatusChange: cb });
+
+  const submitEvidence      = (requestId: bigint, hash: `0x${string}`, cb?: TransactionReporter) =>
+    runWrite({ functionName: "submitEvidence", args: [requestId, hash], onStatusChange: cb });
 
   const publishResult       = (requestId: bigint, plainStatus: number, sig: `0x${string}`, cb?: TransactionReporter) =>
     runWrite({ functionName: "publishDecryptedResult", args: [requestId, plainStatus, sig], onStatusChange: cb });
@@ -402,19 +530,30 @@ export function useShieldCard() {
     requestsQuery,
     employeeRequestsQuery,
     packsQuery,
+    deptsQuery,
+    vendorsQuery,
     globalStateQuery,
     summary,
     refreshQueries,
     submitRequest,
+    submitEvidence,
     registerEmployee,
     freezeEmployee,
     unfreezeEmployee,
+    assignEmployeeDept,
     pauseSubmissions,
     unpauseSubmissions,
     createPack,
     setPolicyThresholds,
     setPackActive,
+    setPackRecurringInterval,
     resetBudgetEpoch,
+    createDept,
+    setDeptActive,
+    setDeptBudget,
+    resetDeptEpoch,
+    registerVendor,
+    setVendorStatus,
     publishResult,
     adminReviewRequest,
   };

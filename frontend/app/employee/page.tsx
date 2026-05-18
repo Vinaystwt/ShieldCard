@@ -16,7 +16,7 @@ import { targetChain } from "@/lib/contracts";
 import { getErrorMessage } from "@/lib/format";
 
 export default function EmployeePage() {
-  const { isConfigured, employeeRequestsQuery, submitRequest, roleQuery } = useShieldCard();
+  const { isConfigured, employeeRequestsQuery, submitRequest, roleQuery, deptsQuery, vendorsQuery } = useShieldCard();
   const { isEmployee } = useRoleRouting();
   const { decryptStatus, encryptAmount, error, isReady } = useCofhe();
   const chainId = useChainId();
@@ -43,12 +43,12 @@ export default function EmployeePage() {
               : undefined;
 
   async function handleSubmit(
-    input: { amount: number; packId: number; memo: string },
-    onStatusChange: Parameters<typeof submitRequest>[3],
+    input: { amount: number; packId: number; deptId: number; vendorId: number; memo: string },
+    onStatusChange: Parameters<typeof submitRequest>[5],
   ) {
     const cents = Math.round(input.amount * 100);
     const encAmount = await encryptAmount(cents);
-    await submitRequest(input.packId, encAmount, input.memo, onStatusChange);
+    await submitRequest(input.packId, input.deptId, input.vendorId, encAmount, input.memo, onStatusChange);
   }
 
   async function handleDecrypt(requestId: bigint, encStatus: string): Promise<number> {
@@ -250,6 +250,8 @@ export default function EmployeePage() {
               isBusy={!canSubmit}
               isEmployee={isEmployee}
               disabledReason={submitDisabledReason}
+              depts={deptsQuery.data ?? []}
+              vendors={vendorsQuery.data ?? []}
             />
 
             {/* Encryption explainer */}

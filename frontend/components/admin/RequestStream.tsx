@@ -7,6 +7,7 @@ import { FileText, Upload, Loader2, CheckCircle, ThumbsUp, ThumbsDown, ReceiptTe
 import { TransactionStatus } from "@/hooks/useShieldCard";
 import { SealedValue } from "@/components/ui/SealedValue";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { RiskBadge } from "@/components/ui/RiskBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatTimestamp, truncateAddress } from "@/lib/format";
 import { PACK_NAME } from "@/lib/contracts";
@@ -86,7 +87,7 @@ export function RequestStream({
       <table className="w-full text-[13px]">
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border-dim)" }}>
-            {["#", "Employee", "Pack", "Sealed Amount", "Memo", "Time", "Status", "Action"].map((col) => (
+            {["#", "Employee", "Pack", "Sealed Amount", "Memo", "Time", "Risk", "Status", "Action"].map((col) => (
               <th
                 key={col}
                 className="pb-3 pr-4 text-left text-[11px] font-medium uppercase tracking-[0.07em] last:pr-0"
@@ -136,6 +137,9 @@ export function RequestStream({
                 </td>
                 <td className="py-3.5 pr-4">
                   <span className="whitespace-nowrap" style={{ color: "var(--color-subtle)" }}>{formatTimestamp(req.timestamp)}</span>
+                </td>
+                <td className="py-3.5 pr-4">
+                  <RiskBadge bitmap={req.riskBitmap} compact />
                 </td>
                 <td className="py-3.5 pr-4">
                   <StatusBadge status={req.publicStatus} published={req.resultPublished} inReview={req.inReview} />

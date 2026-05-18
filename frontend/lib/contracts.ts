@@ -15,9 +15,6 @@ const inEuint32Components = [
 ] as const;
 
 export const shieldCardAbi = [
-  // ── Status constants (read from contract; replicated here for reference) ───
-  // STATUS_SUBMITTED=0 AUTO_APPROVED=1 NEEDS_REVIEW=2 AUTO_DENIED=3 ADMIN_APPROVED=4 ADMIN_DENIED=5
-
   // ── View: admin / global ────────────────────────────────────────────────────
   {
     type: "function",
@@ -47,6 +44,13 @@ export const shieldCardAbi = [
     stateMutability: "view",
     inputs: [{ name: "employee", type: "address", internalType: "address" }],
     outputs: [{ name: "", type: "bool", internalType: "bool" }],
+  },
+  {
+    type: "function",
+    name: "employeeDept",
+    stateMutability: "view",
+    inputs: [{ name: "employee", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "uint8", internalType: "uint8" }],
   },
   {
     type: "function",
@@ -85,6 +89,8 @@ export const shieldCardAbi = [
     outputs: [
       { name: "employee",        type: "address",  internalType: "address"  },
       { name: "packId",          type: "uint8",    internalType: "uint8"    },
+      { name: "deptId",          type: "uint8",    internalType: "uint8"    },
+      { name: "vendorId",        type: "uint16",   internalType: "uint16"   },
       { name: "encAmount",       type: "bytes32",  internalType: "euint32"  },
       { name: "encStatus",       type: "bytes32",  internalType: "euint8"   },
       { name: "memo",            type: "string",   internalType: "string"   },
@@ -93,6 +99,7 @@ export const shieldCardAbi = [
       { name: "publicStatus",    type: "uint8",    internalType: "uint8"    },
       { name: "inReview",        type: "bool",     internalType: "bool"     },
       { name: "receiptHash",     type: "bytes32",  internalType: "bytes32"  },
+      { name: "riskBitmap",      type: "uint16",   internalType: "uint16"   },
     ],
   },
   {
@@ -109,6 +116,20 @@ export const shieldCardAbi = [
     inputs: [{ name: "requestId", type: "uint256", internalType: "uint256" }],
     outputs: [{ name: "", type: "bytes32", internalType: "euint32" }],
   },
+  {
+    type: "function",
+    name: "evidenceHash",
+    stateMutability: "view",
+    inputs: [{ name: "requestId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "bytes32", internalType: "bytes32" }],
+  },
+  {
+    type: "function",
+    name: "evidenceSubmitted",
+    stateMutability: "view",
+    inputs: [{ name: "requestId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+  },
   // ── View: policy packs ─────────────────────────────────────────────────────
   {
     type: "function",
@@ -123,6 +144,20 @@ export const shieldCardAbi = [
     stateMutability: "view",
     inputs: [{ name: "packId", type: "uint8", internalType: "uint8" }],
     outputs: [{ name: "", type: "bool", internalType: "bool" }],
+  },
+  {
+    type: "function",
+    name: "getPackIds",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8[]", internalType: "uint8[]" }],
+  },
+  {
+    type: "function",
+    name: "getActivePackIds",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8[]", internalType: "uint8[]" }],
   },
   {
     type: "function",
@@ -177,6 +212,82 @@ export const shieldCardAbi = [
     inputs: [{ name: "packId", type: "uint8", internalType: "uint8" }],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
   },
+  {
+    type: "function",
+    name: "packRecurringInterval",
+    stateMutability: "view",
+    inputs: [{ name: "packId", type: "uint8", internalType: "uint8" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "lastSubmitTimestamp",
+    stateMutability: "view",
+    inputs: [
+      { name: "employee", type: "address", internalType: "address" },
+      { name: "packId", type: "uint8", internalType: "uint8" },
+    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+  },
+  // ── View: departments ──────────────────────────────────────────────────────
+  {
+    type: "function",
+    name: "getDeptIds",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8[]", internalType: "uint8[]" }],
+  },
+  {
+    type: "function",
+    name: "getDeptInfo",
+    stateMutability: "view",
+    inputs: [{ name: "deptId", type: "uint8", internalType: "uint8" }],
+    outputs: [
+      { name: "name",       type: "string",  internalType: "string"  },
+      { name: "active",     type: "bool",    internalType: "bool"    },
+      { name: "budgetSet",  type: "bool",    internalType: "bool"    },
+      { name: "epochStart", type: "uint256", internalType: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "getDeptEncUsedBudget",
+    stateMutability: "view",
+    inputs: [{ name: "deptId", type: "uint8", internalType: "uint8" }],
+    outputs: [{ name: "", type: "bytes32", internalType: "euint32" }],
+  },
+  {
+    type: "function",
+    name: "deptExists",
+    stateMutability: "view",
+    inputs: [{ name: "deptId", type: "uint8", internalType: "uint8" }],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+  },
+  // ── View: vendors ──────────────────────────────────────────────────────────
+  {
+    type: "function",
+    name: "vendorCount",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint16", internalType: "uint16" }],
+  },
+  {
+    type: "function",
+    name: "vendorExists",
+    stateMutability: "view",
+    inputs: [{ name: "vendorId", type: "uint16", internalType: "uint16" }],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+  },
+  {
+    type: "function",
+    name: "getVendorInfo",
+    stateMutability: "view",
+    inputs: [{ name: "vendorId", type: "uint16", internalType: "uint16" }],
+    outputs: [
+      { name: "name",   type: "string", internalType: "string" },
+      { name: "status", type: "uint8",  internalType: "uint8"  },
+    ],
+  },
   // ── Write: admin ───────────────────────────────────────────────────────────
   {
     type: "function",
@@ -215,6 +326,16 @@ export const shieldCardAbi = [
   },
   {
     type: "function",
+    name: "assignEmployeeDept",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "employee", type: "address", internalType: "address" },
+      { name: "deptId", type: "uint8", internalType: "uint8" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "createPack",
     stateMutability: "nonpayable",
     inputs: [
@@ -229,24 +350,9 @@ export const shieldCardAbi = [
     stateMutability: "nonpayable",
     inputs: [
       { name: "packId", type: "uint8", internalType: "uint8" },
-      {
-        name: "encHardLimit",
-        type: "tuple",
-        internalType: "struct InEuint32",
-        components: inEuint32Components,
-      },
-      {
-        name: "encAutoThreshold",
-        type: "tuple",
-        internalType: "struct InEuint32",
-        components: inEuint32Components,
-      },
-      {
-        name: "encBudgetLimit",
-        type: "tuple",
-        internalType: "struct InEuint32",
-        components: inEuint32Components,
-      },
+      { name: "encHardLimit",     type: "tuple", internalType: "struct InEuint32", components: inEuint32Components },
+      { name: "encAutoThreshold", type: "tuple", internalType: "struct InEuint32", components: inEuint32Components },
+      { name: "encBudgetLimit",   type: "tuple", internalType: "struct InEuint32", components: inEuint32Components },
     ],
     outputs: [],
   },
@@ -262,9 +368,76 @@ export const shieldCardAbi = [
   },
   {
     type: "function",
+    name: "setPackRecurringInterval",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "packId", type: "uint8", internalType: "uint8" },
+      { name: "intervalSeconds", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "resetBudgetEpoch",
     stateMutability: "nonpayable",
     inputs: [{ name: "packId", type: "uint8", internalType: "uint8" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "createDept",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "deptId", type: "uint8", internalType: "uint8" },
+      { name: "name", type: "string", internalType: "string" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "setDeptActive",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "deptId", type: "uint8", internalType: "uint8" },
+      { name: "active", type: "bool", internalType: "bool" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "setDeptBudget",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "deptId", type: "uint8", internalType: "uint8" },
+      { name: "encBudgetCap", type: "tuple", internalType: "struct InEuint32", components: inEuint32Components },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "resetDeptEpoch",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "deptId", type: "uint8", internalType: "uint8" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "registerVendor",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "vendorId", type: "uint16", internalType: "uint16" },
+      { name: "name", type: "string", internalType: "string" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "setVendorStatus",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "vendorId", type: "uint16", internalType: "uint16" },
+      { name: "status", type: "uint8", internalType: "uint8" },
+    ],
     outputs: [],
   },
   {
@@ -294,120 +467,133 @@ export const shieldCardAbi = [
     name: "submitRequest",
     stateMutability: "nonpayable",
     inputs: [
-      { name: "packId", type: "uint8", internalType: "uint8" },
-      {
-        name: "encAmount",
-        type: "tuple",
-        internalType: "struct InEuint32",
-        components: inEuint32Components,
-      },
-      { name: "memo", type: "string", internalType: "string" },
+      { name: "packId",   type: "uint8",  internalType: "uint8"  },
+      { name: "deptId",   type: "uint8",  internalType: "uint8"  },
+      { name: "vendorId", type: "uint16", internalType: "uint16" },
+      { name: "encAmount", type: "tuple", internalType: "struct InEuint32", components: inEuint32Components },
+      { name: "memo",     type: "string", internalType: "string" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "submitEvidence",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "requestId", type: "uint256", internalType: "uint256" },
+      { name: "hash", type: "bytes32", internalType: "bytes32" },
     ],
     outputs: [],
   },
   // ── Events ─────────────────────────────────────────────────────────────────
-  {
-    type: "event",
-    name: "EmployeeRegistered",
-    inputs: [{ name: "employee", type: "address", indexed: true }],
-  },
-  {
-    type: "event",
-    name: "EmployeeFrozen",
-    inputs: [{ name: "employee", type: "address", indexed: true }],
-  },
-  {
-    type: "event",
-    name: "EmployeeUnfrozen",
-    inputs: [{ name: "employee", type: "address", indexed: true }],
-  },
-  {
-    type: "event",
-    name: "SubmissionsPausedEvent",
-    inputs: [],
-  },
-  {
-    type: "event",
-    name: "SubmissionsUnpausedEvent",
-    inputs: [],
-  },
+  { type: "event", name: "EmployeeRegistered",  inputs: [{ name: "employee", type: "address", indexed: true }] },
+  { type: "event", name: "EmployeeFrozen",      inputs: [{ name: "employee", type: "address", indexed: true }] },
+  { type: "event", name: "EmployeeUnfrozen",    inputs: [{ name: "employee", type: "address", indexed: true }] },
+  { type: "event", name: "EmployeeDeptAssigned",inputs: [{ name: "employee", type: "address", indexed: true }, { name: "deptId", type: "uint8", indexed: false }] },
+  { type: "event", name: "SubmissionsPausedEvent",   inputs: [] },
+  { type: "event", name: "SubmissionsUnpausedEvent", inputs: [] },
   {
     type: "event",
     name: "PackCreated",
-    inputs: [
-      { name: "packId", type: "uint8", indexed: true },
-      { name: "name", type: "string", indexed: false },
-    ],
+    inputs: [{ name: "packId", type: "uint8", indexed: true }, { name: "name", type: "string", indexed: false }],
   },
-  {
-    type: "event",
-    name: "PackLimitsSet",
-    inputs: [{ name: "packId", type: "uint8", indexed: true }],
-  },
+  { type: "event", name: "PackLimitsSet",    inputs: [{ name: "packId", type: "uint8", indexed: true }] },
   {
     type: "event",
     name: "PackActiveChanged",
-    inputs: [
-      { name: "packId", type: "uint8", indexed: true },
-      { name: "active", type: "bool", indexed: false },
-    ],
+    inputs: [{ name: "packId", type: "uint8", indexed: true }, { name: "active", type: "bool", indexed: false }],
   },
   {
     type: "event",
     name: "BudgetEpochReset",
-    inputs: [
-      { name: "packId", type: "uint8", indexed: true },
-      { name: "timestamp", type: "uint256", indexed: false },
-    ],
+    inputs: [{ name: "packId", type: "uint8", indexed: true }, { name: "timestamp", type: "uint256", indexed: false }],
+  },
+  {
+    type: "event",
+    name: "PackIntervalSet",
+    inputs: [{ name: "packId", type: "uint8", indexed: true }, { name: "intervalSeconds", type: "uint256", indexed: false }],
+  },
+  {
+    type: "event",
+    name: "DeptCreated",
+    inputs: [{ name: "deptId", type: "uint8", indexed: true }, { name: "name", type: "string", indexed: false }],
+  },
+  {
+    type: "event",
+    name: "DeptBudgetSet",
+    inputs: [{ name: "deptId", type: "uint8", indexed: true }],
+  },
+  {
+    type: "event",
+    name: "DeptEpochReset",
+    inputs: [{ name: "deptId", type: "uint8", indexed: true }, { name: "timestamp", type: "uint256", indexed: false }],
+  },
+  {
+    type: "event",
+    name: "VendorRegistered",
+    inputs: [{ name: "vendorId", type: "uint16", indexed: true }, { name: "name", type: "string", indexed: false }],
+  },
+  {
+    type: "event",
+    name: "VendorStatusUpdated",
+    inputs: [{ name: "vendorId", type: "uint16", indexed: true }, { name: "status", type: "uint8", indexed: false }],
+  },
+  {
+    type: "event",
+    name: "EvidenceSubmitted",
+    inputs: [{ name: "requestId", type: "uint256", indexed: true }, { name: "hash", type: "bytes32", indexed: false }],
   },
   {
     type: "event",
     name: "RequestSubmitted",
     inputs: [
       { name: "requestId", type: "uint256", indexed: true },
-      { name: "employee", type: "address", indexed: true },
-      { name: "packId", type: "uint8", indexed: false },
+      { name: "employee",  type: "address", indexed: true },
+      { name: "packId",    type: "uint8",   indexed: false },
       { name: "timestamp", type: "uint256", indexed: false },
     ],
   },
   {
     type: "event",
     name: "ResultPublished",
-    inputs: [
-      { name: "requestId", type: "uint256", indexed: true },
-      { name: "status", type: "uint8", indexed: false },
-    ],
+    inputs: [{ name: "requestId", type: "uint256", indexed: true }, { name: "status", type: "uint8", indexed: false }],
   },
   {
     type: "event",
     name: "RequestNeedsReview",
     inputs: [
       { name: "requestId", type: "uint256", indexed: true },
-      { name: "employee", type: "address", indexed: true },
-      { name: "packId", type: "uint8", indexed: false },
+      { name: "employee",  type: "address", indexed: true },
+      { name: "packId",    type: "uint8",   indexed: false },
     ],
   },
   {
     type: "event",
     name: "AdminResolved",
-    inputs: [
-      { name: "requestId", type: "uint256", indexed: true },
-      { name: "approved", type: "bool", indexed: false },
-    ],
+    inputs: [{ name: "requestId", type: "uint256", indexed: true }, { name: "approved", type: "bool", indexed: false }],
   },
   // ── Errors ─────────────────────────────────────────────────────────────────
-  { type: "error", name: "EmployeeAlreadyRegistered", inputs: [{ name: "employee", type: "address" }] },
-  { type: "error", name: "EmployeeNotRegistered",     inputs: [{ name: "employee", type: "address" }] },
-  { type: "error", name: "EmployeeIsFrozen",          inputs: [{ name: "employee", type: "address" }] },
-  { type: "error", name: "InvalidEncryptedInput",     inputs: [] },
-  { type: "error", name: "ResultAlreadyPublished",    inputs: [{ name: "requestId", type: "uint256" }] },
-  { type: "error", name: "PackAlreadyExists",         inputs: [{ name: "packId", type: "uint8" }] },
-  { type: "error", name: "PackNotFound",              inputs: [{ name: "packId", type: "uint8" }] },
-  { type: "error", name: "PackInactive",              inputs: [{ name: "packId", type: "uint8" }] },
-  { type: "error", name: "PackLimitsNotSet",          inputs: [{ name: "packId", type: "uint8" }] },
-  { type: "error", name: "SubmissionsPaused",         inputs: [] },
-  { type: "error", name: "RequestNotInReview",        inputs: [{ name: "requestId", type: "uint256" }] },
-  { type: "error", name: "RequestNotFound",           inputs: [{ name: "requestId", type: "uint256" }] },
+  { type: "error", name: "EmployeeAlreadyRegistered",  inputs: [{ name: "employee", type: "address" }] },
+  { type: "error", name: "EmployeeNotRegistered",      inputs: [{ name: "employee", type: "address" }] },
+  { type: "error", name: "EmployeeIsFrozen",           inputs: [{ name: "employee", type: "address" }] },
+  { type: "error", name: "InvalidEncryptedInput",      inputs: [] },
+  { type: "error", name: "ResultAlreadyPublished",     inputs: [{ name: "requestId", type: "uint256" }] },
+  { type: "error", name: "PackAlreadyExists",          inputs: [{ name: "packId", type: "uint8" }] },
+  { type: "error", name: "PackNotFound",               inputs: [{ name: "packId", type: "uint8" }] },
+  { type: "error", name: "PackInactive",               inputs: [{ name: "packId", type: "uint8" }] },
+  { type: "error", name: "PackLimitsNotSet",           inputs: [{ name: "packId", type: "uint8" }] },
+  { type: "error", name: "SubmissionsPaused",          inputs: [] },
+  { type: "error", name: "RequestNotInReview",         inputs: [{ name: "requestId", type: "uint256" }] },
+  { type: "error", name: "RequestNotFound",            inputs: [{ name: "requestId", type: "uint256" }] },
+  { type: "error", name: "NotRequestOwner",            inputs: [{ name: "requestId", type: "uint256" }] },
+  { type: "error", name: "DeptAlreadyExists",          inputs: [{ name: "deptId", type: "uint8" }] },
+  { type: "error", name: "DeptNotFound",               inputs: [{ name: "deptId", type: "uint8" }] },
+  { type: "error", name: "DeptInactive",               inputs: [{ name: "deptId", type: "uint8" }] },
+  { type: "error", name: "VendorAlreadyRegistered",    inputs: [{ name: "vendorId", type: "uint16" }] },
+  { type: "error", name: "VendorNotFound",             inputs: [{ name: "vendorId", type: "uint16" }] },
+  { type: "error", name: "VendorBanned",               inputs: [{ name: "vendorId", type: "uint16" }] },
+  { type: "error", name: "EvidenceAlreadySubmitted",   inputs: [{ name: "requestId", type: "uint256" }] },
+  { type: "error", name: "RecurringIntervalNotElapsed",inputs: [{ name: "nextAllowedTimestamp", type: "uint256" }] },
 ] as const satisfies Abi;
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -415,6 +601,8 @@ export const shieldCardAbi = [
 export type RequestView = {
   employee:        `0x${string}`;
   packId:          number;
+  deptId:          number;
+  vendorId:        number;
   encAmount:       `0x${string}`;
   encStatus:       `0x${string}`;
   memo:            string;
@@ -423,6 +611,7 @@ export type RequestView = {
   publicStatus:    number;
   inReview:        boolean;
   receiptHash:     `0x${string}`;
+  riskBitmap:      number;
 };
 
 export type PackInfo = {
@@ -441,7 +630,21 @@ export type PackSummary = {
   inReview: bigint;
 };
 
-// Status constants — mirrors contract
+export type DeptInfo = {
+  id:         number;
+  name:       string;
+  active:     boolean;
+  budgetSet:  boolean;
+  epochStart: bigint;
+};
+
+export type VendorInfo = {
+  id:     number;
+  name:   string;
+  status: number; // VENDOR_* constants
+};
+
+// Status constants — mirrors ShieldCardControlPlane.sol
 export const STATUS = {
   SUBMITTED:      0,
   AUTO_APPROVED:  1,
@@ -449,6 +652,22 @@ export const STATUS = {
   AUTO_DENIED:    3,
   ADMIN_APPROVED: 4,
   ADMIN_DENIED:   5,
+} as const;
+
+// Vendor status constants — mirrors ShieldCardControlPlane.sol
+export const VENDOR_STATUS = {
+  UNCHECKED: 0,
+  COMPLIANT: 1,
+  SUSPENDED: 2,
+  BANNED:    3,
+} as const;
+
+// Risk bitmap flags — mirrors ShieldCardControlPlane.sol
+export const RISK = {
+  VENDOR_SUSPENDED: 0x0001,
+  VENDOR_UNCHECKED: 0x0002,
+  NO_DEPT:          0x0004,
+  NO_VENDOR:        0x0008,
 } as const;
 
 export function statusLabel(status: number, inReview: boolean): string {
@@ -471,6 +690,25 @@ export function statusColor(status: number, inReview: boolean) {
   return "muted";
 }
 
+export function vendorStatusLabel(status: number): string {
+  switch (status) {
+    case VENDOR_STATUS.COMPLIANT: return "Compliant";
+    case VENDOR_STATUS.SUSPENDED: return "Suspended";
+    case VENDOR_STATUS.BANNED:    return "Banned";
+    default:                      return "Unchecked";
+  }
+}
+
+export function riskFlags(bitmap: number): string[] {
+  const flags: string[] = [];
+  if (bitmap & RISK.VENDOR_SUSPENDED) flags.push("Vendor Suspended");
+  if (bitmap & RISK.VENDOR_UNCHECKED) flags.push("Vendor Unverified");
+  if (bitmap & RISK.NO_DEPT)          flags.push("No Department");
+  if (bitmap & RISK.NO_VENDOR)        flags.push("No Vendor");
+  return flags;
+}
+
+// Fallback pack names — superseded by on-chain getPackIds() + getPackInfo()
 export const POLICY_PACKS = [
   { id: 1, name: "Travel",    hardLimitCents: 200_000, autoThresholdCents: 50_000,  budgetLimitCents: 2_000_000 },
   { id: 2, name: "SaaS",      hardLimitCents: 150_000, autoThresholdCents: 30_000,  budgetLimitCents: 1_000_000 },
