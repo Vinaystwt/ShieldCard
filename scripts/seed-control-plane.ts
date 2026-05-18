@@ -245,8 +245,8 @@ async function main() {
     { signer: employeeA, client: clientA, packId: 2, deptId: 1, vendorId: 0, amount: 28_000n,  memo: "GitHub Copilot Business — team seats",      tier: "AUTO_APPROVED"  },
     // Vendor pack — Ops dept — high amount, auto-denied
     { signer: employeeC, client: clientC, packId: 3, deptId: 3, vendorId: 2, amount: 350_000n, memo: "Full rebrand + brand book — over limit",     tier: "AUTO_DENIED"    },
-    // Marketing pack — Sales dept — compliant vendor
-    { signer: employeeB, client: clientB, packId: 4, deptId: 2, vendorId: 2, amount: 20_000n,  memo: "Podcast sponsorship — tech audience",        tier: "AUTO_APPROVED"  },
+    // Marketing pack — Eng dept — compliant vendor (use employeeA to avoid recurring interval clash with employeeB)
+    { signer: employeeA, client: clientA, packId: 4, deptId: 1, vendorId: 2, amount: 20_000n,  memo: "Podcast sponsorship — tech audience",        tier: "AUTO_APPROVED"  },
     // Travel pack — Eng dept — needs review
     { signer: employeeC, client: clientC, packId: 1, deptId: 3, vendorId: 1, amount: 75_000n,  memo: "AWS re:Invent — Las Vegas, travel + hotel",  tier: "NEEDS_REVIEW"  },
   ];
