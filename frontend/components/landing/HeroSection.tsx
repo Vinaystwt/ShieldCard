@@ -12,9 +12,9 @@ const HEADLINE_LINES = [
 ];
 
 const STATS = [
-  { value: "FHE-native", label: "encryption" },
+  { value: "4 packs",   label: "policy tiers" },
+  { value: "3-tier",    label: "risk bitmap" },
   { value: "FHE-sealed", label: "amounts & limits" },
-  { value: "permit-gated", label: "reveal" },
 ];
 
 export function HeroSection() {
@@ -57,7 +57,7 @@ export function HeroSection() {
               }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-copper animate-pending" />
-              FHE-native · Arbitrum Sepolia
+              Wave 4 · FHE-native · Arbitrum Sepolia
             </span>
           </motion.div>
 

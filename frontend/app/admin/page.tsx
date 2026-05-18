@@ -132,11 +132,12 @@ export default function AdminPage() {
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const reviewRequests = requestsQuery.data?.filter((r) => r.inReview) ?? [];
+  const highRiskCount = requestsQuery.data?.filter((r) => (r.riskBitmap & 0x0003) !== 0).length ?? 0;
   const metrics = [
     { label: "Total requests",   value: summary.total,    color: "var(--color-text)",    accentBorder: "var(--copper-border-dim)", accentBg: "rgba(200,131,63,0.07)" },
     { label: "Pending review",   value: summary.inReview, color: summary.inReview > 0 ? "var(--color-pending)" : "var(--color-subtle)", accentBorder: summary.inReview > 0 ? "rgba(196,148,60,0.20)" : "var(--border-dim)", accentBg: "rgba(196,148,60,0.05)" },
     { label: "Published",        value: summary.published,color: "var(--color-approved)", accentBorder: "rgba(77,145,112,0.20)", accentBg: "rgba(77,145,112,0.05)" },
-    { label: "Awaiting publish", value: summary.pending,  color: summary.pending > 0 ? "var(--color-pending)" : "var(--color-subtle)", accentBorder: summary.pending > 0 ? "rgba(196,148,60,0.16)" : "var(--border-dim)", accentBg: "rgba(196,148,60,0.04)" },
+    { label: "High risk",        value: highRiskCount,    color: highRiskCount > 0 ? "#CF6679" : "var(--color-subtle)", accentBorder: highRiskCount > 0 ? "rgba(147,68,68,0.25)" : "var(--border-dim)", accentBg: "rgba(147,68,68,0.05)" },
   ];
 
   return (

@@ -1,6 +1,7 @@
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Wave4Strip } from "@/components/landing/Wave4Strip";
 import { ArchitectureSection } from "@/components/landing/ArchitectureSection";
 import { CtaStrip } from "@/components/landing/CtaStrip";
 import { WordMark } from "@/components/brand/WordMark";
@@ -55,6 +56,7 @@ export default function LandingPage() {
       <div id="how-it-works">
         <HowItWorks />
       </div>
+      <Wave4Strip />
       <ArchitectureSection />
       <CtaStrip />
 
@@ -66,7 +68,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-[1280px] flex items-center justify-between">
           <WordMark size="sm" />
           <p className="text-[12px] text-subtle">
-            Built on Fhenix CoFHE · Arbitrum Sepolia · Fhenix Buildathon · Wave 3 upgrade
+            Built on Fhenix CoFHE · Arbitrum Sepolia · Fhenix Buildathon · Wave 4
           </p>
         </div>
       </footer>

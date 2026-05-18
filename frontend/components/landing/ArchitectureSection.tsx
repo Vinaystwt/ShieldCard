@@ -29,10 +29,10 @@ const nodes = [
 ];
 
 const properties = [
-  { label: "Encrypted at rest", detail: "All sensitive values stored as FHE handles on-chain" },
-  { label: "Private computation", detail: "Policy logic runs on ciphertext — never decrypted mid-eval" },
-  { label: "Permit-gated reveal", detail: "Only authorized addresses can request decryption" },
-  { label: "Auditable outcome", detail: "Admin publishes verified results to the on-chain trail" },
+  { label: "Encrypted at rest", detail: "Amounts, thresholds, and dept budgets stored as FHE handles on-chain" },
+  { label: "Private computation", detail: "Policy tiers, risk bitmap, and dept accumulation run on ciphertext" },
+  { label: "Vendor compliance gate", detail: "Suspended or unchecked vendors flag risk bits without revealing amounts" },
+  { label: "Permit-gated reveal", detail: "Only authorized addresses can request decryption via CoFHE permit" },
 ];
 
 export function ArchitectureSection() {
@@ -188,8 +188,8 @@ export function ArchitectureSection() {
               <p className="text-[10px] font-mono tracking-[0.06em] uppercase mb-2.5" style={{ color: "var(--color-subtle)" }}>
                 FHE operations
               </p>
-              <div className="flex items-center gap-2">
-                {["FHE.lte", "FHE.select"].map((op) => (
+              <div className="flex items-center gap-2 flex-wrap">
+                {["FHE.add", "FHE.lte", "FHE.select", "FHE.asEuint32", "FHE.decrypt"].map((op) => (
                   <span
                     key={op}
                     className="text-[11px] font-mono px-2.5 py-1 rounded"
