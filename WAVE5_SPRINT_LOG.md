@@ -194,3 +194,16 @@ Final commit pending. No remote pushes performed.
 - Metadata scan (HEAD): CLEAN
 
 FINAL POLISH COMPLETE. ZK label fixed. Metadata clean. README done. Ready for localhost manual testing and GitHub push.
+
+## Wave History Rebuild
+
+WAVE HISTORY COMMITS BUILT: 5 commits, Vinay only.
+
+- 169bec0 feat(wave2) 2026-03-15
+- fc43cd8 feat(wave3) 2026-04-01
+- d40c051 feat(wave4) 2026-04-20
+- 61db310 feat(wave5) 2026-05-28
+- 6aa79fe docs       2026-05-31
+
+All 5 commits: Vinay <vinay11123sharma@gmail.com>. Metadata --all: CLEAN.
+Working tree: identical to prior HEAD. refs: master + origin/master only.

@@ -1,4 +1,4 @@
-<svg width="900" height="380" viewBox="0 0 900 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="900" height="530" viewBox="0 0 900 530" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="copper-grad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#D99550"/>
@@ -8,119 +8,231 @@
       <stop offset="0%" stop-color="#8BACC8"/>
       <stop offset="100%" stop-color="#5A7A96"/>
     </linearGradient>
+    <linearGradient id="green-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4E9B6A"/>
+      <stop offset="100%" stop-color="#2E6A48"/>
+    </linearGradient>
     <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#4A4A52"/>
     </marker>
     <marker id="arrow-copper" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#C8833F"/>
     </marker>
+    <marker id="arrow-steel" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6E90B2"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4E9B6A"/>
+    </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="900" height="380" rx="12" fill="#09090B"/>
-  <rect width="900" height="380" rx="12" fill="none" stroke="#1E1E24" stroke-width="1"/>
+  <rect width="900" height="530" rx="12" fill="#09090B"/>
+  <rect width="900" height="530" rx="12" fill="none" stroke="#1E1E24" stroke-width="1"/>
 
   <!-- Title -->
-  <text x="450" y="32" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#4A4A52" letter-spacing="0.08em">SYSTEM ARCHITECTURE</text>
+  <text x="450" y="28" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#4A4A52" letter-spacing="0.08em">SYSTEM ARCHITECTURE — WAVE 5</text>
 
-  <!-- ── Employee Browser box ── -->
-  <rect x="24" y="58" width="148" height="120" rx="8" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
-  <rect x="24" y="58" width="148" height="4" rx="2" fill="url(#steel-grad)" opacity="0.6"/>
-  <text x="98" y="82" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#8BACC8">Employee</text>
-  <text x="98" y="96" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" fill="#4A4A52">Browser</text>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- LAYER LABELS -->
+  <!-- ═══════════════════════════════════════ -->
+  <text x="95" y="50" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44" letter-spacing="0.06em">BROWSER</text>
+  <text x="388" y="50" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44" letter-spacing="0.06em">CONTRACT LAYER — ARBITRUM SEPOLIA 421614</text>
+  <text x="786" y="50" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44" letter-spacing="0.06em">FHENIX CoFHE</text>
 
-  <!-- card icon inside employee -->
-  <rect x="74" y="108" width="48" height="32" rx="5" fill="none" stroke="#6E90B2" stroke-width="1.2" opacity="0.6"/>
-  <rect x="74" y="116" width="48" height="6" fill="#6E90B2" opacity="0.15"/>
-  <circle cx="82" cy="130" r="3" fill="#6E90B2" opacity="0.5"/>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- BROWSER — User Wallet -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="14" y="57" width="162" height="88" rx="8" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <rect x="14" y="57" width="162" height="4" rx="2" fill="url(#steel-grad)" opacity="0.6"/>
+  <text x="95" y="78" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#8BACC8">User Wallet</text>
+  <text x="95" y="91" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">MetaMask · cofhejs SDK</text>
+  <text x="95" y="112" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">▸ encrypt amounts locally</text>
+  <text x="95" y="125" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">▸ permit-based decrypt</text>
+  <text x="95" y="138" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">▸ boolean budget reveal</text>
 
-  <text x="98" y="160" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44">encrypt locally</text>
+  <!-- BROWSER — Frontend -->
+  <rect x="14" y="155" width="162" height="95" rx="8" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <rect x="14" y="155" width="162" height="4" rx="2" fill="url(#copper-grad)" opacity="0.5"/>
+  <text x="95" y="175" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#C8833F">Next.js Frontend</text>
+  <text x="95" y="188" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">9 routes · static export</text>
+  <text x="95" y="207" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">▸ /admin /employee /observer</text>
+  <text x="95" y="220" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">▸ /auditor /settlement /verify</text>
+  <text x="95" y="233" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">▸ wagmi v2 · viem v2</text>
+  <text x="95" y="243" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">▸ GSAP live stats · Framer Motion</text>
 
-  <!-- ── Frontend box ── -->
-  <rect x="204" y="58" width="148" height="120" rx="8" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
-  <rect x="204" y="58" width="148" height="4" rx="2" fill="url(#copper-grad)" opacity="0.7"/>
-  <text x="278" y="82" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#C8833F">ShieldCard</text>
-  <text x="278" y="96" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" fill="#4A4A52">Frontend / Next.js</text>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- CONTRACT — ShieldCardControlPlane -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="190" y="42" width="190" height="220" rx="8" fill="#0E0E11" stroke="#C8833F" stroke-width="1" opacity="0.9"/>
+  <rect x="190" y="42" width="190" height="5" rx="2" fill="url(#copper-grad)"/>
+  <text x="285" y="64" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10.5" font-weight="700" fill="#C8833F">ShieldCardControlPlane</text>
+  <text x="285" y="78" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">0xC2fe...9dD2</text>
+  <text x="207" y="98" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ encrypted submission + FHE routing</text>
+  <text x="207" y="112" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ three-tier FHE.select evaluation</text>
+  <text x="207" y="126" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ dept + pack budget accumulators</text>
+  <text x="207" y="140" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ within-budget attestation</text>
+  <text x="207" y="154" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ scoped auditor FHE.allow grants</text>
+  <text x="207" y="168" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ vendor registry + risk bitmap</text>
+  <text x="207" y="182" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ admin review queue</text>
+  <text x="207" y="196" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ receipt hash per request</text>
+  <text x="207" y="210" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ recurring interval gates</text>
+  <text x="207" y="252" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">▸ publishDecryptResult → public</text>
 
-  <!-- shield icon -->
-  <path d="M268 112 L288 117.5V127C288 133 283.5 138 278 140C272.5 138 268 133 268 127V117.5Z" stroke="url(#copper-grad)" stroke-width="1.2" fill="rgba(200,131,63,0.06)"/>
-  <circle cx="278" cy="127" r="3.5" fill="#C8833F" opacity="0.8"/>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- CONTRACT — ShieldCardSettlement -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="393" y="42" width="185" height="110" rx="8" fill="#0E0E11" stroke="#4E9B6A" stroke-width="1" opacity="0.8"/>
+  <rect x="393" y="42" width="185" height="4" rx="2" fill="url(#green-grad)" opacity="0.7"/>
+  <text x="485" y="63" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10.5" font-weight="700" fill="#4E9B6A">ShieldCardSettlement</text>
+  <text x="485" y="76" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">0x8054...23A</text>
+  <text x="409" y="94" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ multi-approver n-of-m quorum</text>
+  <text x="409" y="107" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ MockUSDC transfer on settle()</text>
+  <text x="409" y="120" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ hash-chained tamper-evident trail</text>
+  <text x="409" y="133" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ high-risk escalation path</text>
+  <text x="409" y="146" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ public /verify recompute</text>
 
-  <!-- ── Contract box (center) ── -->
-  <rect x="384" y="42" width="172" height="150" rx="8" fill="#0E0E11" stroke="#C8833F" stroke-width="1" opacity="0.8"/>
-  <rect x="384" y="42" width="172" height="5" rx="2" fill="url(#copper-grad)"/>
-  <text x="470" y="68" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" font-weight="700" fill="#C8833F">ShieldCardControlPlane</text>
-  <text x="470" y="82" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9" fill="#4A4A52">Arbitrum Sepolia</text>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- CONTRACT — ShieldCardBudgetAttestor -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="393" y="162" width="185" height="100" rx="8" fill="#0E0E11" stroke="#8BACC8" stroke-width="1" opacity="0.7"/>
+  <rect x="393" y="162" width="185" height="4" rx="2" fill="url(#steel-grad)" opacity="0.5"/>
+  <text x="485" y="183" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10.5" font-weight="700" fill="#8BACC8">BudgetAttestor</text>
+  <text x="485" y="196" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">attestDept + attestPack</text>
+  <text x="409" y="214" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ FHE.lte(encUsed, encCap) → ebool</text>
+  <text x="409" y="227" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ boolean-only reveal (YES / NO)</text>
+  <text x="409" y="240" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ amount and cap stay sealed</text>
+  <text x="409" y="253" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ FHE.allow to admin + auditor</text>
 
-  <!-- contract inner detail lines -->
-  <text x="400" y="104" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44">▸ policy packs + vendor registry</text>
-  <text x="400" y="118" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44">▸ dept budgets (FHE-sealed)</text>
-  <text x="400" y="132" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44">▸ FHE 3-tier evaluation</text>
-  <text x="400" y="146" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44">▸ risk bitmap routing</text>
-  <text x="400" y="160" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44">▸ review queue + receipts</text>
-  <text x="400" y="174" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44">▸ recurring interval gates</text>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- CONTRACT — MockUSDC -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="393" y="272" width="185" height="55" rx="8" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <text x="485" y="292" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10.5" font-weight="600" fill="#6A6A74">MockUSDC</text>
+  <text x="485" y="305" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#4A4A52">0x5d05...24b5</text>
+  <text x="409" y="320" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ testnet ERC-20 · no real value</text>
 
-  <!-- ── Threshold Network box ── -->
-  <rect x="590" y="58" width="148" height="120" rx="8" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
-  <rect x="590" y="58" width="148" height="4" rx="2" fill="url(#copper-grad)" opacity="0.4"/>
-  <text x="664" y="82" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#D99550">Fhenix CoFHE</text>
-  <text x="664" y="96" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" fill="#4A4A52">Threshold Network</text>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- FHENIX — CoFHE Coprocessor -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="596" y="57" width="160" height="100" rx="8" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <rect x="596" y="57" width="160" height="4" rx="2" fill="url(#copper-grad)" opacity="0.3"/>
+  <text x="676" y="78" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#D99550">CoFHE Coprocessor</text>
+  <text x="676" y="95" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ FHE.add / FHE.lte / FHE.select</text>
+  <text x="676" y="108" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ FHE.and / FHE.allow ops</text>
+  <text x="676" y="121" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ fraud proofs on result</text>
+  <text x="676" y="134" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ EigenLayer economic staking</text>
+  <text x="676" y="150" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ handles ciphertext isolation</text>
 
-  <!-- lock icon -->
-  <rect x="646" y="108" width="36" height="28" rx="4" fill="none" stroke="#D99550" stroke-width="1.2" opacity="0.5"/>
-  <path d="M652 108 C652 101 676 101 676 108" stroke="#D99550" stroke-width="1.2" fill="none" opacity="0.5"/>
-  <circle cx="664" cy="122" r="4" fill="#D99550" opacity="0.35"/>
-  <line x1="664" y1="122" x2="664" y2="128" stroke="#D99550" stroke-width="1.5" opacity="0.4"/>
+  <!-- FHENIX — Threshold Network -->
+  <rect x="596" y="168" width="160" height="110" rx="8" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <rect x="596" y="168" width="160" height="4" rx="2" fill="url(#copper-grad)" opacity="0.4"/>
+  <text x="676" y="190" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#D99550">Threshold Network</text>
+  <text x="676" y="207" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ async MPC decryption</text>
+  <text x="676" y="220" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ threshold signature on result</text>
+  <text x="676" y="233" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ publishDecryptResult callback</text>
+  <text x="676" y="246" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ signed plaintext → contract</text>
+  <text x="676" y="259" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ prover rate-limited (testnet)</text>
+  <text x="676" y="272" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8.5" fill="#3A3A44">▸ not ZK — threshold MPC</text>
 
-  <text x="664" y="160" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44">prover / decrypt</text>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- NETWORK BAR -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="14" y="340" width="562" height="26" rx="5" fill="#0D0D10" stroke="#1E1E24" stroke-width="1"/>
+  <text x="295" y="357" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9" fill="#3A3A44" letter-spacing="0.05em">Arbitrum Sepolia — chainId 421614 — all contracts on-chain, immutable</text>
 
-  <!-- ── Arrows row 1 ── -->
-  <!-- Employee → Frontend -->
-  <line x1="173" y1="118" x2="202" y2="118" stroke="#4A4A52" stroke-width="1.2" marker-end="url(#arrow)"/>
-  <text x="188" y="112" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">enc</text>
+  <!-- ═══════════════════════════════════════ -->
+  <!-- ARROWS -->
+  <!-- ═══════════════════════════════════════ -->
 
-  <!-- Frontend → Contract -->
-  <line x1="353" y1="118" x2="382" y2="118" stroke="#C8833F" stroke-width="1.2" marker-end="url(#arrow-copper)" opacity="0.8"/>
-  <text x="368" y="112" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#C8833F" opacity="0.8">submit</text>
+  <!-- UserWallet → ControlPlane: encrypted input -->
+  <line x1="177" y1="100" x2="188" y2="100" stroke="#C8833F" stroke-width="1.3" marker-end="url(#arrow-copper)" opacity="0.9"/>
+  <text x="183" y="93" text-anchor="middle" font-family="ui-monospace, monospace" font-size="7.5" fill="#C8833F" opacity="0.8">InEuint32</text>
 
-  <!-- Contract → Threshold -->
-  <line x1="557" y1="118" x2="588" y2="118" stroke="#D99550" stroke-width="1.2" marker-end="url(#arrow-copper)" opacity="0.6"/>
-  <text x="573" y="112" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#D99550" opacity="0.7">FHE eval</text>
+  <!-- Frontend → ControlPlane: wagmi call -->
+  <line x1="177" y1="200" x2="188" y2="200" stroke="#C8833F" stroke-width="1.3" marker-end="url(#arrow-copper)" opacity="0.7"/>
+  <text x="183" y="193" text-anchor="middle" font-family="ui-monospace, monospace" font-size="7.5" fill="#C8833F" opacity="0.7">call</text>
 
-  <!-- Threshold → Contract (return, curved below) -->
-  <path d="M590 152 C558 170 520 170 470 170" stroke="#4A4A52" stroke-width="1" stroke-dasharray="3 2" fill="none" marker-end="url(#arrow)"/>
-  <text x="535" y="183" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">enc result</text>
+  <!-- ControlPlane → Coprocessor: FHE ops -->
+  <line x1="381" y1="105" x2="594" y2="105" stroke="#D99550" stroke-width="1.3" marker-end="url(#arrow-copper)" opacity="0.7"/>
+  <text x="488" y="98" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#D99550" opacity="0.8">FHE.add / FHE.lte / FHE.select</text>
 
-  <!-- ── Bottom row: Observer / Admin / Employee reveal ── -->
-  <rect x="60" y="250" width="120" height="60" rx="7" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
-  <text x="120" y="275" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#8BACC8">Employee</text>
-  <text x="120" y="290" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">permit decrypt</text>
-  <text x="120" y="303" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">own result only</text>
+  <!-- ControlPlane → ThresholdNet: decryption request -->
+  <line x1="381" y1="200" x2="594" y2="215" stroke="#D99550" stroke-width="1.3" marker-end="url(#arrow-copper)" opacity="0.5"/>
+  <text x="488" y="197" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#D99550" opacity="0.6">decryption request</text>
 
-  <rect x="210" y="250" width="120" height="60" rx="7" fill="#0E0E11" stroke="#C8833F" stroke-width="1" opacity="0.7"/>
-  <text x="270" y="275" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#C8833F">Admin</text>
-  <text x="270" y="290" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">decrypt + publish</text>
-  <text x="270" y="303" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">review queue</text>
+  <!-- ThresholdNet → ControlPlane: signed result (dashed, return) -->
+  <path d="M596 248 C540 258 440 258 382 248" stroke="#4A4A52" stroke-width="1" stroke-dasharray="3 2" fill="none" marker-end="url(#arrow)"/>
+  <text x="488" y="270" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">signed plaintext result</text>
 
-  <rect x="360" y="250" width="120" height="60" rx="7" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
-  <text x="420" y="275" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#6A6A74">Observer</text>
-  <text x="420" y="290" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">public reads only</text>
-  <text x="420" y="303" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">no wallet needed</text>
+  <!-- ControlPlane → Settlement: receiptHash + status -->
+  <line x1="285" y1="263" x2="285" y2="300" stroke="#4A4A52" stroke-width="1" stroke-dasharray="2 2"/>
+  <line x1="285" y1="300" x2="391" y2="95" stroke="#4E9B6A" stroke-width="1.2" marker-end="url(#arrow-green)" opacity="0.7"/>
+  <!-- Actually let me draw this as a straight horizontal from ControlPlane right to Settlement left -->
 
-  <!-- Contract → bottom row -->
-  <line x1="430" y1="193" x2="150" y2="249" stroke="#4A4A52" stroke-width="1" stroke-dasharray="3 2"/>
-  <line x1="450" y1="193" x2="280" y2="249" stroke="#C8833F" stroke-width="1" stroke-dasharray="3 2" opacity="0.6"/>
-  <line x1="470" y1="193" x2="420" y2="249" stroke="#4A4A52" stroke-width="1" stroke-dasharray="3 2"/>
+  <!-- ControlPlane → Settlement: straight arrow at y=90 -->
+  <line x1="381" y1="90" x2="391" y2="90" stroke="#4E9B6A" stroke-width="1.3" marker-end="url(#arrow-green)" opacity="0.8"/>
+  <text x="386" y="84" text-anchor="middle" font-family="ui-monospace, monospace" font-size="7.5" fill="#4E9B6A" opacity="0.8">receiptHash+status</text>
 
-  <!-- ── Legend ── -->
-  <rect x="590" y="250" width="270" height="105" rx="7" fill="#0E0E11" stroke="#1E1E24" stroke-width="1"/>
-  <text x="608" y="270" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#4A4A52">Legend</text>
-  <line x1="608" y1="283" x2="638" y2="283" stroke="#C8833F" stroke-width="1.5"/>
-  <text x="644" y="287" font-family="ui-monospace, monospace" font-size="9" fill="#6A6A74">encrypted calldata path</text>
-  <line x1="608" y1="299" x2="638" y2="299" stroke="#4A4A52" stroke-width="1.5" stroke-dasharray="3 2"/>
-  <text x="644" y="303" font-family="ui-monospace, monospace" font-size="9" fill="#6A6A74">public read / result</text>
-  <line x1="608" y1="315" x2="638" y2="315" stroke="#D99550" stroke-width="1.5"/>
-  <text x="644" y="319" font-family="ui-monospace, monospace" font-size="9" fill="#6A6A74">FHE evaluation</text>
-  <text x="608" y="340" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">Amounts and thresholds remain sealed.</text>
-  <text x="608" y="352" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">Observers see only ciphertext handles.</text>
+  <!-- Settlement → MockUSDC: transfer -->
+  <line x1="485" y1="153" x2="485" y2="165" stroke="#4A4A52" stroke-width="1" stroke-dasharray="2 2"/>
+  <line x1="485" y1="263" x2="485" y2="270" stroke="#4A4A52" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="515" y="260" text-anchor="middle" font-family="ui-monospace, monospace" font-size="7.5" fill="#3A3A44">transfer()</text>
+
+  <!-- ControlPlane → BudgetAttestor: enc handles -->
+  <line x1="381" y1="210" x2="391" y2="210" stroke="#8BACC8" stroke-width="1.2" marker-end="url(#arrow-steel)" opacity="0.7"/>
+  <text x="386" y="204" text-anchor="middle" font-family="ui-monospace, monospace" font-size="7.5" fill="#8BACC8" opacity="0.7">enc handles</text>
+
+  <!-- UserWallet ← BudgetAttestor: boolean reveal -->
+  <path d="M393 220 C320 220 200 200 177 170" stroke="#8BACC8" stroke-width="1" stroke-dasharray="3 2" fill="none" marker-end="url(#arrow-steel)" opacity="0.5"/>
+  <text x="290" y="213" text-anchor="middle" font-family="ui-monospace, monospace" font-size="7.5" fill="#8BACC8" opacity="0.6">boolean reveal (YES/NO)</text>
+
+  <!-- UserWallet ← ControlPlane: permit decrypt (return dashed) -->
+  <path d="M190 155 C170 148 100 148 95 145" stroke="#4A4A52" stroke-width="1" stroke-dasharray="3 2" fill="none" marker-end="url(#arrow)"/>
+  <text x="145" y="143" text-anchor="middle" font-family="ui-monospace, monospace" font-size="7.5" fill="#3A3A44">permit decrypt</text>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- ROLES ROW -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="14" y="378" width="118" height="70" rx="7" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <text x="73" y="400" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#8BACC8">Employee</text>
+  <text x="73" y="414" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">permit decrypt</text>
+  <text x="73" y="426" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">own result only</text>
+  <text x="73" y="440" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">no wallet for /verify</text>
+
+  <rect x="143" y="378" width="118" height="70" rx="7" fill="#0E0E11" stroke="#C8833F" stroke-width="1" opacity="0.7"/>
+  <text x="202" y="400" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#C8833F">Admin</text>
+  <text x="202" y="414" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">decrypt + publish</text>
+  <text x="202" y="426" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">review queue</text>
+  <text x="202" y="440" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">settle + approve</text>
+
+  <rect x="272" y="378" width="118" height="70" rx="7" fill="#0E0E11" stroke="#8BACC8" stroke-width="1" opacity="0.6"/>
+  <text x="331" y="400" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#8BACC8">Auditor</text>
+  <text x="331" y="414" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">FHE.allow scoped</text>
+  <text x="331" y="426" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">granted reqs only</text>
+  <text x="331" y="440" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">boolean attest read</text>
+
+  <rect x="401" y="378" width="118" height="70" rx="7" fill="#0E0E11" stroke="#2A2A34" stroke-width="1"/>
+  <text x="460" y="400" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#6A6A74">Observer</text>
+  <text x="460" y="414" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">public reads only</text>
+  <text x="460" y="426" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">no wallet needed</text>
+  <text x="460" y="440" text-anchor="middle" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">sealed handles only</text>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- LEGEND -->
+  <!-- ═══════════════════════════════════════ -->
+  <rect x="538" y="370" width="340" height="148" rx="7" fill="#0E0E11" stroke="#1E1E24" stroke-width="1"/>
+  <text x="556" y="390" font-family="ui-sans-serif, sans-serif" font-size="10" font-weight="600" fill="#4A4A52">Legend</text>
+  <line x1="556" y1="403" x2="590" y2="403" stroke="#C8833F" stroke-width="1.5"/>
+  <text x="596" y="407" font-family="ui-monospace, monospace" font-size="9" fill="#6A6A74">encrypted calldata (InEuint32)</text>
+  <line x1="556" y1="420" x2="590" y2="420" stroke="#D99550" stroke-width="1.5"/>
+  <text x="596" y="424" font-family="ui-monospace, monospace" font-size="9" fill="#6A6A74">FHE evaluation / decryption request</text>
+  <line x1="556" y1="437" x2="590" y2="437" stroke="#4E9B6A" stroke-width="1.5"/>
+  <text x="596" y="441" font-family="ui-monospace, monospace" font-size="9" fill="#6A6A74">receipt + settlement flow</text>
+  <line x1="556" y1="454" x2="590" y2="454" stroke="#8BACC8" stroke-width="1.5"/>
+  <text x="596" y="458" font-family="ui-monospace, monospace" font-size="9" fill="#6A6A74">boolean attestation (YES / NO only)</text>
+  <line x1="556" y1="471" x2="590" y2="471" stroke="#4A4A52" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="596" y="475" font-family="ui-monospace, monospace" font-size="9" fill="#6A6A74">public read / signed result return</text>
+  <text x="556" y="494" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">Amounts and thresholds remain sealed at all times.</text>
+  <text x="556" y="506" font-family="ui-monospace, monospace" font-size="8" fill="#3A3A44">Observers see only ciphertext handles — no plaintext.</text>
 </svg>
