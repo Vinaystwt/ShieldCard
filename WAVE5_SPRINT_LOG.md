@@ -229,3 +229,25 @@ Fixes applied:
 No ZK/zero-knowledge/trustless violations found. encAmount and encStatus passed only to SealedValue or CoFHE decrypt functions — never displayed as numbers. Positional index access in verify/page.tsx is acceptable (standalone viem client, correct ABI order). BigInt arithmetic throughout is safe (all Number() conversions correct). Settlement amounts displayed as `Number(s.amount) / 1e6` (MockUSDC 6 decimals).
 
 Build: CLEAN (9 routes, 0 TypeScript errors). Tests: 131 passing. ZK grep: CLEAN.
+
+## White Screen Fix
+
+### Root cause
+`dangerouslySetInnerHTML` chunk-error reload script in `frontend/app/layout.tsx` intercepted ALL `window.error` events whose filename contained `/_next/static/chunks/`. On each match it called `window.location.reload(true)` and set a `sessionStorage` guard. In the preview browser (and in some real browser sessions) `sessionStorage` did not persist across hard reloads → infinite reload loop → `app/page.js` (landing page) was aborted mid-load → React partially mounted (layout + providers) but no page content rendered → dark blank screen.
+
+Evidence:
+- `hasReact: false` on first eval (React not executing)
+- Network: all `GET /` marked `ERR_ABORTED` (reload loop)
+- `sessionStorage.__chunk_reload` null → guard not persisting
+- Body nodes: only `NEXT-ROUTE-ANNOUNCER`, `DIV`, `BUTTON` (providers mounted; page content absent)
+
+### Fixes applied
+1. **Removed reload script** — deleted entire `<script dangerouslySetInnerHTML>` block from `layout.tsx`. Root cause eliminated.
+2. **Added `ErrorBoundary`** — new `frontend/components/shared/ErrorBoundary.tsx` (React class component, `getDerivedStateFromError`). Wraps root layout body. Any future runtime crash shows inline retry UI instead of blank screen.
+
+### Verification
+- Build: CLEAN (9 routes)
+- Tests: 131/131 passing
+- ZK grep: CLEAN
+
+Commit: 8628d4d
