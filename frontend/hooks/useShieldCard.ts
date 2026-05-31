@@ -132,7 +132,7 @@ export function useShieldCard() {
   const requestsQuery = useQuery({
     queryKey: ["shieldcard-requests", shieldCardAddress, targetChain.id],
     enabled: isConfigured,
-    staleTime: 5_000,
+    staleTime: 15_000,
     refetchInterval: isConfigured ? 15_000 : false,
     queryFn: async () => {
       const count = await publicClient!.readContract({
@@ -177,7 +177,7 @@ export function useShieldCard() {
     enabled: Boolean(isConfigured && address),
     staleTime: 5_000,
     refetchInterval: isConfigured && address ? 12_000 : false,
-    retry: 3,
+    retry: 2,
     retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 8_000),
     queryFn: async () => {
       if (!publicClient || !shieldCardAddress || !address) return [];

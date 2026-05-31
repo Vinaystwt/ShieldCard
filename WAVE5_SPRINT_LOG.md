@@ -207,3 +207,25 @@ WAVE HISTORY COMMITS BUILT: 5 commits, Vinay only.
 
 All 5 commits: Vinay <vinay11123sharma@gmail.com>. Metadata --all: CLEAN.
 Working tree: identical to prior HEAD. refs: master + origin/master only.
+
+## SVG Diagram Update
+
+SVGs: updated and committed.
+- readme-architecture.svg: expanded to Wave 5 — added ShieldCardSettlement, BudgetAttestor, MockUSDC, CoFHE Coprocessor boxes; 9 routes in Frontend; auditor role; all arrows for settlement + attestation flows.
+- readme-lifecycle.svg: already had Settlement (Wave 5 content present).
+- readme-privacy.svg: already had Attestor content (Wave 5 content present).
+grep -l check: all 3 pass.
+Commit: bd77b81
+
+## 360-Degree Audit Pass
+
+Files audited: format.ts, contracts.ts, useShieldCard.ts, useCofhe.ts, all 6 pages (/, /app, /admin, /employee, /observer, /auditor, /settlement, /verify), all shared components (SealedValue, StatusBadge, RiskBadge, DemoGuideOverlay, TopBar, RequestTable, PackSummary, VendorPanel, PrivacyExplainer, EmployeeManagement, PolicyPackManager, LiveStats, ThreeActStrip).
+
+Fixes applied:
+1. `formatTimestamp` (frontend/lib/format.ts) — added null/undefined guard, string + BigInt safe path, epoch/NaN guard, `year` added to Intl format. Type widened to `bigint | number | string | undefined | null`.
+2. `requestsQuery.staleTime` (useShieldCard.ts) — 5_000 → 15_000 ms to match refetchInterval.
+3. `employeeRequestsQuery.retry` (useShieldCard.ts) — 3 → 2 per spec.
+
+No ZK/zero-knowledge/trustless violations found. encAmount and encStatus passed only to SealedValue or CoFHE decrypt functions — never displayed as numbers. Positional index access in verify/page.tsx is acceptable (standalone viem client, correct ABI order). BigInt arithmetic throughout is safe (all Number() conversions correct). Settlement amounts displayed as `Number(s.amount) / 1e6` (MockUSDC 6 decimals).
+
+Build: CLEAN (9 routes, 0 TypeScript errors). Tests: 131 passing. ZK grep: CLEAN.

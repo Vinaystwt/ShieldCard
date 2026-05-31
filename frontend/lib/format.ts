@@ -13,14 +13,26 @@ export function truncateHandle(value?: string | bigint) {
   return `${normalized.slice(0, 10)}...${normalized.slice(-6)}`;
 }
 
-export function formatTimestamp(value: bigint | number) {
-  const timestamp = typeof value === "bigint" ? Number(value) : value;
+export function formatTimestamp(
+  timestamp: bigint | number | string | undefined | null
+): string {
+  if (timestamp === undefined || timestamp === null) return "—";
+  const num =
+    typeof timestamp === "bigint"
+      ? Number(timestamp)
+      : typeof timestamp === "string"
+      ? parseInt(timestamp, 10)
+      : timestamp;
+  if (!num || isNaN(num) || num <= 0) return "—";
+  const date = new Date(num * 1000);
+  if (isNaN(date.getTime())) return "—";
   return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(timestamp * 1000));
+  }).format(date);
 }
 
 export function getErrorMessage(error: unknown) {
