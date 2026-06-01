@@ -25,6 +25,7 @@ const SETTLEMENT_BYTECODE = settlementArtifact.bytecode as `0x${string}`;
 const mockUSDCAbi = mockUsdcArtifact.abi as Abi;
 const controlPlaneAbi = controlPlaneArtifact.abi as Abi;
 const settlementAbi = settlementArtifact.abi as Abi;
+const DEPLOY_STEP_DELAY_MS = 1_000;
 
 type DeployStep = {
   label: string;
@@ -91,9 +92,16 @@ export default function DeployPage() {
     setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
   }
 
+  function waitForWalletState() {
+    return new Promise((resolve) => setTimeout(resolve, DEPLOY_STEP_DELAY_MS));
+  }
+
   async function handleDeploy() {
+    const currentChainId = chainId;
+    const deploymentPublicClient = publicClient;
+
     if (!address || !isConnected) return;
-    if (!publicClient) {
+    if (!deploymentPublicClient) {
       setDeployError("Public client unavailable. Refresh the page and try again.");
       return;
     }
@@ -101,7 +109,7 @@ export default function DeployPage() {
     setDeployError(null);
 
     try {
-      if (!isCorrectChain) {
+      if (currentChainId !== arbitrumSepolia.id) {
         try {
           await switchChainAsync({ chainId: arbitrumSepolia.id });
           return;
@@ -131,7 +139,7 @@ export default function DeployPage() {
         account: address as `0x${string}`,
       });
       setStep(0, { txHash: usdcHash });
-      const usdcReceipt = await publicClient.waitForTransactionReceipt({
+      const usdcReceipt = await deploymentPublicClient.waitForTransactionReceipt({
         hash: usdcHash,
         confirmations: 2,
       });
@@ -140,6 +148,7 @@ export default function DeployPage() {
       }
       const usdcAddr = usdcReceipt.contractAddress;
       setStep(0, { status: "done", address: usdcAddr, txHash: usdcHash });
+      await waitForWalletState();
 
       // Step 2: Deploy ShieldCardControlPlane
       setStep(1, { status: "pending" });
@@ -151,7 +160,7 @@ export default function DeployPage() {
         account: address as `0x${string}`,
       });
       setStep(1, { txHash: coreHash });
-      const coreReceipt = await publicClient.waitForTransactionReceipt({
+      const coreReceipt = await deploymentPublicClient.waitForTransactionReceipt({
         hash: coreHash,
         confirmations: 2,
       });
@@ -160,6 +169,7 @@ export default function DeployPage() {
       }
       const coreAddr = coreReceipt.contractAddress;
       setStep(1, { status: "done", address: coreAddr, txHash: coreHash });
+      await waitForWalletState();
 
       // Step 3: Deploy ShieldCardSettlement
       setStep(2, { status: "pending" });
@@ -171,7 +181,7 @@ export default function DeployPage() {
         account: address as `0x${string}`,
       });
       setStep(2, { txHash: settlementHash });
-      const settlementReceipt = await publicClient.waitForTransactionReceipt({
+      const settlementReceipt = await deploymentPublicClient.waitForTransactionReceipt({
         hash: settlementHash,
         confirmations: 2,
       });
@@ -180,6 +190,7 @@ export default function DeployPage() {
       }
       const settlementAddr = settlementReceipt.contractAddress;
       setStep(2, { status: "done", address: settlementAddr, txHash: settlementHash });
+      await waitForWalletState();
 
       // Step 4: Save to localStorage
       setStep(3, { status: "pending" });
@@ -196,8 +207,8 @@ export default function DeployPage() {
         friendly = "Transaction cancelled. Click Deploy to try again.";
       } else if (/insufficient funds|insufficient balance/i.test(raw)) {
         friendly = "Not enough ETH for gas. Get testnet ETH at faucet.triangleplatform.com/arbitrum/sepolia";
-      } else if (/chain|network|could not fetch|timeout|disconnected/i.test(raw)) {
-        friendly = "Wrong network. Switch to Arbitrum Sepolia.";
+      } else if (/could not fetch|timeout|disconnected/i.test(raw)) {
+        friendly = "Network error. Check your RPC connection, then try again.";
       } else {
         friendly = `Deploy failed: ${raw.slice(0, 150)}`;
       }
