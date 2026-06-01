@@ -12,6 +12,7 @@ import {
   VendorInfo,
   shieldCardAbi,
   getShieldCardAddress,
+  standalonePublicClient,
   targetChain,
 } from "@/lib/contracts";
 
@@ -84,11 +85,14 @@ function maxBigInt(...values: Array<bigint | null | undefined>) {
 
 export function useShieldCard() {
   const queryClient = useQueryClient();
-  const publicClient = usePublicClient({ chainId: targetChain.id });
+  const wagmiPublicClient = usePublicClient({ chainId: targetChain.id });
+  // Always have a working public client — falls back to standalone for observer/unauthenticated reads
+  const publicClient = wagmiPublicClient ?? standalonePublicClient;
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const runtimeAddress = getShieldCardAddress();
-  const isConfigured = Boolean(runtimeAddress && publicClient);
+  // isConfigured: address must be non-empty; publicClient always available via standalone fallback
+  const isConfigured = Boolean(runtimeAddress && runtimeAddress.startsWith("0x"));
 
   // ── Role query ─────────────────────────────────────────────────────────────
   const roleQuery = useQuery({
@@ -97,34 +101,36 @@ export function useShieldCard() {
     queryFn: async () => {
       const [admin, isEmployee, isFrozen, isPaused] = await Promise.all([
         publicClient!.readContract({
-          address: runtimeAddress!,
+          address: runtimeAddress as `0x${string}`,
           abi: shieldCardAbi,
           functionName: "admin",
         }),
         publicClient!.readContract({
-          address: runtimeAddress!,
+          address: runtimeAddress as `0x${string}`,
           abi: shieldCardAbi,
           functionName: "employeeRegistered",
           args: [address!],
         }),
         publicClient!.readContract({
-          address: runtimeAddress!,
+          address: runtimeAddress as `0x${string}`,
           abi: shieldCardAbi,
           functionName: "employeeFrozen",
           args: [address!],
         }),
         publicClient!.readContract({
-          address: runtimeAddress!,
+          address: runtimeAddress as `0x${string}`,
           abi: shieldCardAbi,
           functionName: "submissionsPaused",
         }),
       ]);
 
       return {
-        isAdmin: admin.toLowerCase() === address!.toLowerCase(),
-        isEmployee,
-        isFrozen,
-        isPaused,
+        isAdmin: typeof admin === "string" && typeof address === "string"
+          ? admin.toLowerCase() === address.toLowerCase()
+          : false,
+        isEmployee: Boolean(isEmployee),
+        isFrozen: Boolean(isFrozen),
+        isPaused: Boolean(isPaused),
       };
     },
   });
@@ -137,7 +143,7 @@ export function useShieldCard() {
     refetchInterval: isConfigured ? 15_000 : false,
     queryFn: async () => {
       const count = await publicClient!.readContract({
-        address: runtimeAddress!,
+        address: runtimeAddress as `0x${string}`,
         abi: shieldCardAbi,
         functionName: "getRequestCount",
       });
@@ -146,19 +152,19 @@ export function useShieldCard() {
         Array.from({ length: Number(count) }).map(async (_, index) => {
           const [raw, evHash, evSubmitted] = await Promise.all([
             publicClient!.readContract({
-              address: runtimeAddress!,
+              address: runtimeAddress as `0x${string}`,
               abi: shieldCardAbi,
               functionName: "getRequest",
               args: [BigInt(index)],
             }) as unknown as Promise<RawRequest>,
             publicClient!.readContract({
-              address: runtimeAddress!,
+              address: runtimeAddress as `0x${string}`,
               abi: shieldCardAbi,
               functionName: "evidenceHash",
               args: [BigInt(index)],
             }) as Promise<`0x${string}`>,
             publicClient!.readContract({
-              address: runtimeAddress!,
+              address: runtimeAddress as `0x${string}`,
               abi: shieldCardAbi,
               functionName: "evidenceSubmitted",
               args: [BigInt(index)],
@@ -187,7 +193,7 @@ export function useShieldCard() {
       const emp = address;
 
       const ids = await pc.readContract({
-        address: contractAddr,
+        address: contractAddr as `0x${string}`,
         abi: shieldCardAbi,
         functionName: "getEmployeeRequestIds",
         args: [emp],
@@ -199,19 +205,19 @@ export function useShieldCard() {
         ids.map(async (id) => {
           const [raw, evHash, evSubmitted] = await Promise.all([
             pc.readContract({
-              address: contractAddr,
+              address: contractAddr as `0x${string}`,
               abi: shieldCardAbi,
               functionName: "getRequest",
               args: [id],
             }) as unknown as Promise<RawRequest>,
             pc.readContract({
-              address: contractAddr,
+              address: contractAddr as `0x${string}`,
               abi: shieldCardAbi,
               functionName: "evidenceHash",
               args: [id],
             }) as Promise<`0x${string}`>,
             pc.readContract({
-              address: contractAddr,
+              address: contractAddr as `0x${string}`,
               abi: shieldCardAbi,
               functionName: "evidenceSubmitted",
               args: [id],
@@ -243,7 +249,7 @@ export function useShieldCard() {
     refetchInterval: isConfigured ? 60_000 : false,
     queryFn: async () => {
       const packIds = await publicClient!.readContract({
-        address: runtimeAddress!,
+        address: runtimeAddress as `0x${string}`,
         abi: shieldCardAbi,
         functionName: "getPackIds",
       }) as readonly number[];
@@ -251,14 +257,14 @@ export function useShieldCard() {
       return Promise.all(
         packIds.map(async (packId) => {
           const [name, active, limitsSet, epochStart] = (await publicClient!.readContract({
-            address: runtimeAddress!,
+            address: runtimeAddress as `0x${string}`,
             abi: shieldCardAbi,
             functionName: "getPackInfo",
             args: [packId],
           })) as [string, boolean, boolean, bigint];
 
           const [total, approved, denied, pending, inReview] = (await publicClient!.readContract({
-            address: runtimeAddress!,
+            address: runtimeAddress as `0x${string}`,
             abi: shieldCardAbi,
             functionName: "getPackSummary",
             args: [packId],
@@ -289,7 +295,7 @@ export function useShieldCard() {
     refetchInterval: isConfigured ? 60_000 : false,
     queryFn: async () => {
       const deptIds = await publicClient!.readContract({
-        address: runtimeAddress!,
+        address: runtimeAddress as `0x${string}`,
         abi: shieldCardAbi,
         functionName: "getDeptIds",
       }) as readonly number[];
@@ -297,7 +303,7 @@ export function useShieldCard() {
       return Promise.all(
         deptIds.map(async (deptId) => {
           const [name, active, budgetSet, epochStart] = (await publicClient!.readContract({
-            address: runtimeAddress!,
+            address: runtimeAddress as `0x${string}`,
             abi: shieldCardAbi,
             functionName: "getDeptInfo",
             args: [deptId],
@@ -323,7 +329,7 @@ export function useShieldCard() {
     refetchInterval: isConfigured ? 60_000 : false,
     queryFn: async () => {
       const count = Number(await publicClient!.readContract({
-        address: runtimeAddress!,
+        address: runtimeAddress as `0x${string}`,
         abi: shieldCardAbi,
         functionName: "vendorCount",
       }));
@@ -334,7 +340,7 @@ export function useShieldCard() {
       return Promise.all(
         Array.from({ length: count }, (_, i) => i + 1).map(async (vendorId) => {
           const exists = await publicClient!.readContract({
-            address: runtimeAddress!,
+            address: runtimeAddress as `0x${string}`,
             abi: shieldCardAbi,
             functionName: "vendorExists",
             args: [vendorId],
@@ -342,7 +348,7 @@ export function useShieldCard() {
           if (!exists) return null;
 
           const [name, status] = (await publicClient!.readContract({
-            address: runtimeAddress!,
+            address: runtimeAddress as `0x${string}`,
             abi: shieldCardAbi,
             functionName: "getVendorInfo",
             args: [vendorId],
@@ -367,12 +373,12 @@ export function useShieldCard() {
     queryFn: async () => {
       const [isPaused, employeeCount] = await Promise.all([
         publicClient!.readContract({
-          address: runtimeAddress!,
+          address: runtimeAddress as `0x${string}`,
           abi: shieldCardAbi,
           functionName: "submissionsPaused",
         }),
         publicClient!.readContract({
-          address: runtimeAddress!,
+          address: runtimeAddress as `0x${string}`,
           abi: shieldCardAbi,
           functionName: "getRegisteredEmployeeCount",
         }),
@@ -444,7 +450,7 @@ export function useShieldCard() {
       }
 
       const gasEstimate = await publicClient.estimateContractGas({
-        address: runtimeAddress,
+        address: runtimeAddress as `0x${string}`,
         abi: shieldCardAbi,
         functionName: functionName as never,
         args: args as never,
@@ -454,7 +460,7 @@ export function useShieldCard() {
       onStatusChange?.({ phase: "awaiting_wallet" });
 
       const hash = await writeContractAsync({
-        address: runtimeAddress,
+        address: runtimeAddress as `0x${string}`,
         abi: shieldCardAbi,
         functionName: functionName as never,
         args: args as never,

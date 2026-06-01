@@ -120,7 +120,7 @@ export function RequestStream({
                   <span className="font-mono" style={{ color: "var(--color-subtle)" }}>#{key}</span>
                 </td>
                 <td className="py-3.5 pr-4">
-                  <span className="font-mono" style={{ color: "var(--color-muted)" }}>{getEmployeeName(req.employee) !== req.employee ? getEmployeeName(req.employee) : truncateAddress(req.employee)}</span>
+                  <span className="font-mono" style={{ color: "var(--color-muted)" }}>{getEmployeeName(req?.employee)}</span>
                 </td>
                 <td className="py-3.5 pr-4">
                   <span

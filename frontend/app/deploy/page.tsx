@@ -106,6 +106,8 @@ export default function DeployPage() {
         abi: [],
         bytecode: (mockUsdcArtifact as any).bytecode,
         args: [],
+        chain: targetChain,
+        account: address as `0x${string}`,
       });
       setStep(0, { txHash: usdcHash });
       const usdcReceipt = await publicClient.waitForTransactionReceipt({ hash: usdcHash });
@@ -118,6 +120,8 @@ export default function DeployPage() {
         abi: [],
         bytecode: (coreArtifact as any).bytecode,
         args: [],
+        chain: targetChain,
+        account: address as `0x${string}`,
       });
       setStep(1, { txHash: coreHash });
       const coreReceipt = await publicClient.waitForTransactionReceipt({ hash: coreHash });
@@ -130,6 +134,8 @@ export default function DeployPage() {
         abi: [],
         bytecode: (settlementArtifact as any).bytecode,
         args: [coreAddr, usdcAddr],
+        chain: targetChain,
+        account: address as `0x${string}`,
       });
       setStep(2, { txHash: settlementHash });
       const settlementReceipt = await publicClient.waitForTransactionReceipt({ hash: settlementHash });
@@ -145,11 +151,31 @@ export default function DeployPage() {
 
       setDeployed({ core: coreAddr, settlement: settlementAddr, usdc: usdcAddr });
     } catch (err: any) {
-      setDeployError(err?.message ?? "Deployment failed. Check your wallet and try again.");
+      const raw: string = err?.message ?? err?.toString() ?? "";
+      let friendly = "Deployment failed. Check your wallet and try again.";
+      if (/user rejected|user denied|rejected the request/i.test(raw)) {
+        friendly = "Transaction rejected in wallet. Click Deploy again when ready.";
+      } else if (/insufficient funds|insufficient balance/i.test(raw)) {
+        friendly = "Insufficient testnet ETH. Get funds from the faucet above, then try again.";
+      } else if (/network|could not fetch|timeout|disconnected/i.test(raw)) {
+        friendly = "Network error. Check your connection or RPC, then try again.";
+      }
+      setDeployError(friendly);
       setSteps((prev) => prev.map((s) => s.status === "pending" ? { ...s, status: "error" } : s));
     } finally {
       setDeploying(false);
     }
+  }
+
+  function handleReset() {
+    setDeployError(null);
+    setDeploying(false);
+    setSteps([
+      { label: "Deploy MockUSDC", status: "idle" },
+      { label: "Deploy ShieldCardControlPlane", status: "idle" },
+      { label: "Deploy ShieldCardSettlement", status: "idle" },
+      { label: "Save instance", status: "idle" },
+    ]);
   }
 
   return (
@@ -242,7 +268,14 @@ export default function DeployPage() {
               {deployError && (
                 <div className="rounded-lg px-4 py-3 mb-4 text-[13px]"
                   style={{ background: "var(--denied-bg)", border: "1px solid rgba(147,68,68,0.20)", color: "var(--color-denied)" }}>
-                  {deployError}
+                  <p className="mb-2">{deployError}</p>
+                  <button
+                    onClick={handleReset}
+                    className="text-[11px] underline underline-offset-2 opacity-70 hover:opacity-100 transition-opacity"
+                    style={{ color: "var(--color-denied)" }}
+                  >
+                    Reset and Try Again
+                  </button>
                 </div>
               )}
 

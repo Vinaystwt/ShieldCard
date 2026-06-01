@@ -1,4 +1,5 @@
 import type { Abi } from "viem";
+import { createPublicClient, http } from "viem";
 import { arbitrumSepolia } from "wagmi/chains";
 import { getInstanceAddress, getSettlementAddress as _getSettlementAddress, getMockUsdcAddress as _getMockUsdcAddress } from "./instance";
 
@@ -15,23 +16,31 @@ export const mockUsdcAddress =
   (process.env.NEXT_PUBLIC_MOCKUSDC_ADDRESS as `0x${string}` | undefined) ??
   undefined;
 
-// Runtime getters — read localStorage first, then fall back to env constants
-export function getShieldCardAddress(): `0x${string}` | undefined {
-  const addr = getInstanceAddress();
-  return addr ? (addr as `0x${string}`) : shieldCardAddress;
+// Runtime getters — always return string (empty string = not configured)
+export function getShieldCardAddress(): string {
+  return getInstanceAddress();
 }
 
-export function getRuntimeSettlementAddress(): `0x${string}` | undefined {
-  const addr = _getSettlementAddress();
-  return addr ? (addr as `0x${string}`) : settlementAddress;
+export function getRuntimeSettlementAddress(): string {
+  return _getSettlementAddress();
 }
 
-export function getRuntimeMockUsdcAddress(): `0x${string}` | undefined {
-  const addr = _getMockUsdcAddress();
-  return addr ? (addr as `0x${string}`) : mockUsdcAddress;
+export function getRuntimeMockUsdcAddress(): string {
+  return _getMockUsdcAddress();
 }
 
 export const targetChain = arbitrumSepolia;
+
+// Standalone public client — works without wallet connection.
+// Used for all read-only queries so observer page loads with no wallet.
+export const standalonePublicClient = createPublicClient({
+  chain: arbitrumSepolia,
+  transport: http(
+    process.env.NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL ??
+    "https://sepolia-rollup.arbitrum.io/rpc",
+    { timeout: 12_000 },
+  ),
+});
 
 const inEuint32Components = [
   { name: "ctHash", type: "uint256", internalType: "uint256" },

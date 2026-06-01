@@ -8,6 +8,7 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Banknote, Link2, ExternalLink, CheckCircle, Clock, Loader2, AlertCircle } from "lucide-react";
 
 import { AppHeader } from "@/components/shell/AppHeader";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { useShieldCard } from "@/hooks/useShieldCard";
 import {
   shieldCardAddress,
@@ -163,6 +164,7 @@ export default function SettlementPage() {
   };
 
   return (
+    <ErrorBoundary name="Settlement">
     <div className="min-h-screen bg-base">
       <AppHeader />
       <main className="mx-auto max-w-[1280px] px-6 py-10">
@@ -320,6 +322,7 @@ export default function SettlementPage() {
         </div>
       </main>
     </div>
+    </ErrorBoundary>
   );
 }
 

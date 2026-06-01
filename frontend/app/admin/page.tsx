@@ -8,6 +8,7 @@ import { Shield, RefreshCw, AlertTriangle, Pause, Play, ClipboardCheck } from "l
 import { useChainId } from "wagmi";
 
 import { AppHeader } from "@/components/shell/AppHeader";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { RequestStream } from "@/components/admin/RequestStream";
 import { EmployeeManagement } from "@/components/admin/EmployeeManagement";
 import { PolicyPackManager } from "@/components/admin/PolicyPackManager";
@@ -143,6 +144,7 @@ export default function AdminPage() {
   ];
 
   return (
+    <ErrorBoundary name="Admin">
     <div className="min-h-screen bg-base">
       <AppHeader />
       <main className="mx-auto max-w-[1280px] px-6 py-10">
@@ -359,5 +361,6 @@ export default function AdminPage() {
 
       </main>
     </div>
+    </ErrorBoundary>
   );
 }

@@ -8,6 +8,7 @@ import { useAccount, usePublicClient } from "wagmi";
 import { Eye, EyeOff, Lock, ShieldCheck, Download, Loader2, SplitSquareHorizontal } from "lucide-react";
 
 import { AppHeader } from "@/components/shell/AppHeader";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { useShieldCard } from "@/hooks/useShieldCard";
 import { useCofhe } from "@/hooks/useCofhe";
 import {
@@ -26,7 +27,7 @@ export default function AuditorPage() {
   const publicClient = usePublicClient({ chainId: targetChain.id });
   const { requestsQuery } = useShieldCard();
   const { decryptStatus } = useCofhe();
-  const runtimeAddress = getShieldCardAddress();
+  const runtimeAddress = getShieldCardAddress() as `0x${string}`;
 
   const [onChainAuditor, setOnChainAuditor] = useState<string | null>(null);
   // null = not loaded yet (loading), undefined = loaded but error, Set = loaded OK
@@ -133,6 +134,7 @@ export default function AuditorPage() {
   const proofDecrypted = proofFocusId ? decrypted[proofFocusId] : undefined;
 
   return (
+    <ErrorBoundary name="Auditor">
     <div className="min-h-screen bg-base">
       <AppHeader />
       <main className="mx-auto max-w-[1280px] px-6 py-10">
@@ -214,7 +216,7 @@ export default function AuditorPage() {
                       background: isFocus ? "rgba(110,144,178,0.05)" : "transparent",
                     }}>
                     <td className="px-4 py-3 font-mono" style={{ color: "var(--color-subtle)" }}>#{req.id.toString()}</td>
-                    <td className="px-4 py-3 font-mono" style={{ color: "var(--color-muted)" }}>{getEmployeeName(req.employee) !== req.employee ? getEmployeeName(req.employee) : truncateAddress(req.employee)}</td>
+                    <td className="px-4 py-3 font-mono" style={{ color: "var(--color-muted)" }}>{getEmployeeName(req?.employee)}</td>
                     <td className="px-4 py-3" style={{ color: "var(--color-muted)" }}>{PACK_NAME[req.packId] ?? `Pack #${req.packId}`}</td>
                     <td className="px-4 py-3" style={{ color: "var(--color-muted)" }}>{statusLabel(req.publicStatus, req.inReview)}</td>
                     <td className="px-4 py-3 font-mono text-[11px]" style={{ color: "var(--color-subtle)" }}>
@@ -292,7 +294,7 @@ export default function AuditorPage() {
                   <div className="space-y-2">
                     {[
                       { label: "Request ID",  value: `#${proofFocusId}` },
-                      { label: "Employee",    value: getEmployeeName(proofReq.employee) !== proofReq.employee ? getEmployeeName(proofReq.employee) : truncateAddress(proofReq.employee) },
+                      { label: "Employee",    value: getEmployeeName(proofReq?.employee) },
                       { label: "Pack",        value: PACK_NAME[proofReq.packId] ?? `Pack #${proofReq.packId}` },
                       { label: "Public status", value: statusLabel(proofReq.publicStatus, proofReq.inReview) },
                       { label: "Amount",      value: "🔒 sealed" },
@@ -314,7 +316,7 @@ export default function AuditorPage() {
                     <div className="space-y-2">
                       {[
                         { label: "Request ID",  value: `#${proofFocusId}` },
-                        { label: "Employee",    value: getEmployeeName(proofReq.employee) !== proofReq.employee ? getEmployeeName(proofReq.employee) : truncateAddress(proofReq.employee) },
+                        { label: "Employee",    value: getEmployeeName(proofReq?.employee) },
                         { label: "Pack",        value: PACK_NAME[proofReq.packId] ?? `Pack #${proofReq.packId}` },
                         { label: "Public status", value: statusLabel(proofReq.publicStatus, proofReq.inReview) },
                         { label: "Amount",      value: "🔒 sealed (amount not disclosed)" },
@@ -359,5 +361,6 @@ export default function AuditorPage() {
         </div>
       </main>
     </div>
+    </ErrorBoundary>
   );
 }

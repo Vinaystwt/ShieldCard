@@ -65,7 +65,7 @@ export function RequestTable({ requests, depts, vendors }: RequestTableProps) {
                   <span className="font-mono text-subtle">#{req.id.toString()}</span>
                 </td>
                 <td className="py-3.5 pr-4">
-                  <span className="font-mono text-muted">{getEmployeeName(req.employee) !== req.employee ? getEmployeeName(req.employee) : truncateAddress(req.employee)}</span>
+                  <span className="font-mono text-muted">{getEmployeeName(req?.employee)}</span>
                 </td>
                 <td className="py-3.5 pr-4">
                   <span

@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { motion } from "framer-motion";
 import { Eye, RefreshCw } from "lucide-react";
 import { TopBar } from "@/components/shell/TopBar";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { RequestTable } from "@/components/observer/RequestTable";
 import { PackSummary } from "@/components/observer/PackSummary";
 import { VendorPanel } from "@/components/observer/VendorPanel";
@@ -15,6 +16,7 @@ export default function ObserverPage() {
   const { isConfigured, requestsQuery, packsQuery, deptsQuery, vendorsQuery } = useShieldCard();
 
   return (
+    <ErrorBoundary name="Observer">
     <div className="min-h-screen bg-base">
       <TopBar />
       <main className="mx-auto max-w-[1280px] px-6 py-10">
@@ -240,5 +242,6 @@ export default function ObserverPage() {
         </motion.div>
       </main>
     </div>
+    </ErrorBoundary>
   );
 }
