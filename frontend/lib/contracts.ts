@@ -31,16 +31,23 @@ export function getRuntimeMockUsdcAddress(): string {
 
 export const targetChain = arbitrumSepolia;
 
-// Standalone public client — works without wallet connection.
-// Used for all read-only queries so observer page loads with no wallet.
-export const standalonePublicClient = createPublicClient({
-  chain: arbitrumSepolia,
-  transport: http(
-    process.env.NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL ??
-    "https://sepolia-rollup.arbitrum.io/rpc",
-    { timeout: 12_000 },
-  ),
-});
+// Standalone public client — lazy singleton, safe for static export.
+// Call getStandalonePublicClient() inside hooks/queryFns only (never at module level).
+let _standaloneClient: ReturnType<typeof createPublicClient> | null = null;
+
+export function getStandalonePublicClient() {
+  if (!_standaloneClient) {
+    _standaloneClient = createPublicClient({
+      chain: arbitrumSepolia,
+      transport: http(
+        process.env.NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL ??
+        "https://sepolia-rollup.arbitrum.io/rpc",
+        { timeout: 12_000 },
+      ),
+    });
+  }
+  return _standaloneClient;
+}
 
 const inEuint32Components = [
   { name: "ctHash", type: "uint256", internalType: "uint256" },

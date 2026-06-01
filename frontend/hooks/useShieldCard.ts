@@ -12,7 +12,7 @@ import {
   VendorInfo,
   shieldCardAbi,
   getShieldCardAddress,
-  standalonePublicClient,
+  getStandalonePublicClient,
   targetChain,
 } from "@/lib/contracts";
 
@@ -87,7 +87,7 @@ export function useShieldCard() {
   const queryClient = useQueryClient();
   const wagmiPublicClient = usePublicClient({ chainId: targetChain.id });
   // Always have a working public client — falls back to standalone for observer/unauthenticated reads
-  const publicClient = wagmiPublicClient ?? standalonePublicClient;
+  const publicClient = wagmiPublicClient ?? getStandalonePublicClient();
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const runtimeAddress = getShieldCardAddress();
