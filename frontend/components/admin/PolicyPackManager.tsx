@@ -22,7 +22,7 @@ export interface PackRowData {
 }
 
 interface PolicyPackManagerProps {
-  packs:            PackRowData[];
+  packs?:           PackRowData[];
   onSetThresholds:  (packId: number, hardUsd: number, autoUsd: number, budgetUsd: number, cb: (s: TransactionStatus) => void) => Promise<unknown>;
   onSetActive:      (packId: number, active: boolean, cb: (s: TransactionStatus) => void) => Promise<unknown>;
   onResetBudget:    (packId: number, cb: (s: TransactionStatus) => void) => Promise<unknown>;
@@ -254,7 +254,7 @@ export function PolicyPackManager({
   disabledReason,
 }: PolicyPackManagerProps) {
   const [expanded, setExpanded] = useState(true);
-  const packMap = new Map(packs.map((p) => [p.id, p]));
+  const packMap = new Map((packs ?? []).map((p) => [p.id, p]));
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-mid)" }}>

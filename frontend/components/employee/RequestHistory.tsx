@@ -14,7 +14,7 @@ import {
 import type { RequestView } from "@/lib/contracts";
 
 interface RequestHistoryProps {
-  requests: Array<{ id: bigint } & RequestView>;
+  requests?: Array<{ id: bigint } & RequestView>;
   onDecrypt: (requestId: bigint, encStatus: string) => Promise<number>;
   canReveal: boolean;
 }
@@ -91,7 +91,8 @@ function cardBorder(req: RequestView) {
 }
 
 export function RequestHistory({ requests, onDecrypt, canReveal }: RequestHistoryProps) {
-  if (requests.length === 0) {
+  const safeRequests = requests ?? [];
+  if (safeRequests.length === 0) {
     return (
       <EmptyState
         icon={Inbox}
@@ -103,7 +104,7 @@ export function RequestHistory({ requests, onDecrypt, canReveal }: RequestHistor
 
   return (
     <div className="flex flex-col gap-3">
-      {[...requests].reverse().map((req, i) => (
+      {[...safeRequests].reverse().map((req, i) => (
         <motion.div
           key={req.id.toString()}
           initial={{ opacity: 0, y: 8 }}

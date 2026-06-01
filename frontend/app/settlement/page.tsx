@@ -19,6 +19,7 @@ import {
   settlementStateLabel,
   PACK_NAME,
   targetChain,
+  getStandalonePublicClient,
 } from "@/lib/contracts";
 import { truncateAddress } from "@/lib/format";
 
@@ -36,7 +37,8 @@ type SettlementSummary = {
 
 export default function SettlementPage() {
   const { address } = useAccount();
-  const publicClient = usePublicClient({ chainId: targetChain.id });
+  const wagmiPublicClient = usePublicClient({ chainId: targetChain.id });
+  const publicClient = wagmiPublicClient ?? getStandalonePublicClient();
   const { data: walletClient } = useWalletClient({ chainId: targetChain.id });
   const { requestsQuery } = useShieldCard();
 
@@ -63,7 +65,7 @@ export default function SettlementPage() {
       const result: Record<string, SettlementSummary> = {};
       const approvedState: Record<string, boolean> = {};
       await Promise.all(
-        requestsQuery.data!.map(async (req) => {
+        (requestsQuery.data ?? []).map(async (req) => {
           try {
             const exists = await pc.readContract({ address: sAddr, abi: settlementAbi, functionName: "settlementExists", args: [req.id] }) as boolean;
             if (!exists) return;
@@ -98,7 +100,7 @@ export default function SettlementPage() {
     (async () => {
       try {
         const adminAddr = await pc.readContract({ address: cAddr, abi: shieldCardAbi, functionName: "admin" }) as string;
-        setIsAdmin(adminAddr.toLowerCase() === address.toLowerCase());
+        setIsAdmin((adminAddr?.toLowerCase() ?? "") === (address?.toLowerCase() ?? ""));
         const approver = await pc.readContract({ address: sAddr, abi: settlementAbi, functionName: "isApprover", args: [address] }) as boolean;
         setIsApprover(approver);
       } catch { /* skip */ }

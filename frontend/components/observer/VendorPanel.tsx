@@ -6,7 +6,7 @@ import { VENDOR_STATUS, vendorStatusLabel } from "@/lib/contracts";
 import type { VendorInfo } from "@/lib/contracts";
 
 interface VendorPanelProps {
-  vendors: VendorInfo[];
+  vendors?: VendorInfo[];
   isLoading?: boolean;
 }
 
@@ -37,6 +37,7 @@ function statusStyle(status: number) {
 }
 
 export function VendorPanel({ vendors, isLoading }: VendorPanelProps) {
+  const safeVendors = vendors ?? [];
   if (isLoading) {
     return (
       <div className="flex items-center gap-2.5 py-4">
@@ -48,7 +49,7 @@ export function VendorPanel({ vendors, isLoading }: VendorPanelProps) {
     );
   }
 
-  if (vendors.length === 0) {
+  if (safeVendors.length === 0) {
     return (
       <p className="text-[13px] py-4" style={{ color: "var(--color-subtle)" }}>
         No vendors registered.
@@ -58,7 +59,7 @@ export function VendorPanel({ vendors, isLoading }: VendorPanelProps) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {vendors.map((v, i) => {
+      {safeVendors.map((v, i) => {
         const style = statusStyle(v.status);
         return (
           <motion.div

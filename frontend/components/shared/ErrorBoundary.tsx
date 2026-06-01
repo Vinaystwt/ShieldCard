@@ -3,8 +3,8 @@
 import React from "react";
 
 interface Props {
-  name: string;
   children: React.ReactNode;
+  name?: string;
 }
 
 interface State {

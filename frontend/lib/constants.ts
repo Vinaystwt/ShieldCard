@@ -29,6 +29,13 @@ export const DEMO_VENDORS: Record<number, string> = {
   5: "Coinbase Ventures",
 };
 
+const PACK_NAMES: Record<number, string> = {
+  1: "Travel",
+  2: "SaaS",
+  3: "Vendor",
+  4: "Marketing",
+};
+
 // Safe short-form address (no external import — avoids circular dep)
 function _truncate(addr: string): string {
   if (!addr || addr.length < 10) return addr || "Unknown";
@@ -38,22 +45,20 @@ function _truncate(addr: string): string {
 // Employee display name — null-safe
 export function getEmployeeName(address: string | undefined | null): string {
   if (!address) return "Unknown";
-  return DEMO_NAMES[address.toLowerCase()] ?? _truncate(address);
+  const key = address.toLowerCase();
+  return DEMO_NAMES[key] ?? _truncate(address);
 }
 
 // Vendor display name — null-safe; call with (vendorId, onChainName)
 export function getVendorName(vendorId: number | bigint | undefined | null, onChainName?: string): string {
-  if (vendorId == null) return onChainName ?? "Unknown";
-  const id = Number(vendorId);
-  return DEMO_VENDORS[id] ?? onChainName ?? `Vendor #${id}`;
+  if (vendorId === undefined || vendorId === null) return onChainName ?? "Unknown";
+  return DEMO_VENDORS[Number(vendorId)] ?? onChainName ?? `Vendor #${vendorId}`;
 }
 
 // Pack display name — null-safe
 export function getPackName(packId: number | bigint | undefined | null): string {
-  const PACK_NAMES: Record<number, string> = { 1: "Travel", 2: "SaaS", 3: "Vendor", 4: "Marketing" };
-  if (packId == null) return "Unknown";
-  const id = Number(packId);
-  return PACK_NAMES[id] ?? `Pack #${id}`;
+  if (packId === undefined || packId === null) return "Unknown";
+  return PACK_NAMES[Number(packId)] ?? `Pack #${packId}`;
 }
 
 export const APP_COPY = {

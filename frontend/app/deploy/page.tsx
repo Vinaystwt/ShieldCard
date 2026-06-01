@@ -5,15 +5,24 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAccount, usePublicClient, useChainId, useBalance } from "wagmi";
+import { useAccount, usePublicClient, useChainId, useBalance, useSwitchChain, useWalletClient } from "wagmi";
+import type { Abi } from "viem";
 import { CheckCircle2, Circle, ExternalLink, Lock, ReceiptText, ShieldCheck, Users, Loader2, ArrowRight } from "lucide-react";
 import { TopBar } from "@/components/shell/TopBar";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { WalletButton } from "@/components/wallet/WalletButton";
-import { SwitchNetworkButton } from "@/components/ui/SwitchNetworkButton";
 import { targetChain } from "@/lib/contracts";
-import { setInstanceAddresses } from "@/lib/instance";
+import mockUsdcArtifact from "../_artifacts/MockUSDC.json";
+import controlPlaneArtifact from "../_artifacts/ShieldCardControlPlane.json";
+import settlementArtifact from "../_artifacts/ShieldCardSettlement.json";
 
 const ARBISCAN = "https://sepolia.arbiscan.io";
+const MOCK_USDC_BYTECODE = mockUsdcArtifact.bytecode as `0x${string}`;
+const CONTROL_PLANE_BYTECODE = controlPlaneArtifact.bytecode as `0x${string}`;
+const SETTLEMENT_BYTECODE = settlementArtifact.bytecode as `0x${string}`;
+const mockUSDCAbi = mockUsdcArtifact.abi as Abi;
+const controlPlaneAbi = controlPlaneArtifact.abi as Abi;
+const settlementAbi = settlementArtifact.abi as Abi;
 
 type DeployStep = {
   label: string;
@@ -48,7 +57,9 @@ const FEATURE_CARDS = [
 export default function DeployPage() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
+  const { switchChain, switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
   const publicClient = usePublicClient({ chainId: targetChain.id });
+  const { data: walletClient } = useWalletClient({ chainId: targetChain.id });
   const { data: balance } = useBalance({ address, chainId: targetChain.id });
 
   const [steps, setSteps] = useState<DeployStep[]>([
@@ -82,63 +93,52 @@ export default function DeployPage() {
     setDeployError(null);
 
     try {
-      const { createWalletClient, custom } = await import("viem");
-      const walletClient = createWalletClient({
-        chain: targetChain,
-        transport: custom((window as any).ethereum),
-        account: address,
-      });
-
-      // Dynamically import bytecodes at deploy time
-      const [mockUsdcArtifact, coreArtifact, settlementArtifact] = await Promise.all([
-        import("../_artifacts/MockUSDC.json").catch(() => null),
-        import("../_artifacts/ShieldCardControlPlane.json").catch(() => null),
-        import("../_artifacts/ShieldCardSettlement.json").catch(() => null),
-      ]);
-
-      if (!mockUsdcArtifact || !coreArtifact || !settlementArtifact) {
-        throw new Error("Contract artifacts not bundled. Run `pnpm build` first.");
+      if (chainId !== targetChain.id) {
+        await switchChainAsync({ chainId: targetChain.id });
+      }
+      if (!walletClient) {
+        throw new Error("Wallet client unavailable. Reconnect your wallet and try again.");
       }
 
       // Step 1: Deploy MockUSDC
       setStep(0, { status: "pending" });
       const usdcHash = await walletClient.deployContract({
-        abi: [],
-        bytecode: (mockUsdcArtifact as any).bytecode,
+        abi: mockUSDCAbi,
+        bytecode: MOCK_USDC_BYTECODE,
         args: [],
         chain: targetChain,
         account: address as `0x${string}`,
       });
       setStep(0, { txHash: usdcHash });
-      const usdcReceipt = await publicClient.waitForTransactionReceipt({ hash: usdcHash });
+      const usdcReceipt = await publicClient.waitForTransactionReceipt({ hash: usdcHash, confirmations: 1 });
       const usdcAddr = usdcReceipt.contractAddress!;
       setStep(0, { status: "done", address: usdcAddr, txHash: usdcHash });
 
       // Step 2: Deploy ShieldCardControlPlane
       setStep(1, { status: "pending" });
       const coreHash = await walletClient.deployContract({
-        abi: [],
-        bytecode: (coreArtifact as any).bytecode,
+        abi: controlPlaneAbi,
+        bytecode: CONTROL_PLANE_BYTECODE,
         args: [],
         chain: targetChain,
         account: address as `0x${string}`,
       });
       setStep(1, { txHash: coreHash });
-      const coreReceipt = await publicClient.waitForTransactionReceipt({ hash: coreHash });
+      const coreReceipt = await publicClient.waitForTransactionReceipt({ hash: coreHash, confirmations: 1 });
       const coreAddr = coreReceipt.contractAddress!;
       setStep(1, { status: "done", address: coreAddr, txHash: coreHash });
 
       // Step 3: Deploy ShieldCardSettlement
       setStep(2, { status: "pending" });
       const settlementHash = await walletClient.deployContract({
-        abi: [],
-        bytecode: (settlementArtifact as any).bytecode,
+        abi: settlementAbi,
+        bytecode: SETTLEMENT_BYTECODE,
         args: [coreAddr, usdcAddr],
         chain: targetChain,
         account: address as `0x${string}`,
       });
       setStep(2, { txHash: settlementHash });
-      const settlementReceipt = await publicClient.waitForTransactionReceipt({ hash: settlementHash });
+      const settlementReceipt = await publicClient.waitForTransactionReceipt({ hash: settlementHash, confirmations: 1 });
       const settlementAddr = settlementReceipt.contractAddress!;
       setStep(2, { status: "done", address: settlementAddr, txHash: settlementHash });
 
@@ -154,11 +154,13 @@ export default function DeployPage() {
       const raw: string = err?.message ?? err?.toString() ?? "";
       let friendly = "Deployment failed. Check your wallet and try again.";
       if (/user rejected|user denied|rejected the request/i.test(raw)) {
-        friendly = "Transaction rejected in wallet. Click Deploy again when ready.";
+        friendly = "Transaction cancelled. Click Deploy to try again.";
       } else if (/insufficient funds|insufficient balance/i.test(raw)) {
-        friendly = "Insufficient testnet ETH. Get funds from the faucet above, then try again.";
-      } else if (/network|could not fetch|timeout|disconnected/i.test(raw)) {
-        friendly = "Network error. Check your connection or RPC, then try again.";
+        friendly = "Not enough ETH for gas. Get testnet ETH at faucet.triangleplatform.com/arbitrum/sepolia";
+      } else if (/chain|network|could not fetch|timeout|disconnected/i.test(raw)) {
+        friendly = "Wrong network. Switch to Arbitrum Sepolia.";
+      } else {
+        friendly = `Deploy failed: ${raw.slice(0, 150)}`;
       }
       setDeployError(friendly);
       setSteps((prev) => prev.map((s) => s.status === "pending" ? { ...s, status: "error" } : s));
@@ -179,6 +181,7 @@ export default function DeployPage() {
   }
 
   return (
+    <ErrorBoundary name="Deploy">
     <div className="min-h-screen bg-base">
       <TopBar />
       <main className="mx-auto max-w-[900px] px-6 py-16">
@@ -217,7 +220,14 @@ export default function DeployPage() {
                 )}
                 {i === 1 && !p.done && isConnected && (
                   <div className="ml-auto">
-                    <SwitchNetworkButton compact />
+                    <button
+                      onClick={() => switchChain({ chainId: targetChain.id })}
+                      disabled={isSwitchingNetwork}
+                      className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all hover:brightness-110 disabled:opacity-50"
+                      style={{ background: "rgba(200,131,63,0.10)", border: "1px solid var(--copper-border-dim)", color: "var(--color-copper)" }}
+                    >
+                      {isSwitchingNetwork ? "Switching..." : "Switch to Arbitrum Sepolia"}
+                    </button>
                   </div>
                 )}
                 {i === 2 && !p.done && isConnected && isRightNetwork && (
@@ -359,5 +369,6 @@ export default function DeployPage() {
 
       </main>
     </div>
+    </ErrorBoundary>
   );
 }

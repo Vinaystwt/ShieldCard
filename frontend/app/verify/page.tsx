@@ -124,7 +124,7 @@ export default function VerifyPage() {
           ],
         ),
       );
-      const match = computed.toLowerCase() === req.receiptHash.toLowerCase();
+      const match = (computed?.toLowerCase() ?? "") === (req.receiptHash?.toLowerCase() ?? "");
 
       let settlement: SettlementVerify | undefined = undefined;
 
@@ -170,7 +170,7 @@ export default function VerifyPage() {
                 ],
               ),
             );
-            const chainMatch = computedChain.toLowerCase() === s.settlementHash.toLowerCase();
+            const chainMatch = (computedChain?.toLowerCase() ?? "") === (s.settlementHash?.toLowerCase() ?? "");
 
             settlement = {
               state:           Number(s.state),

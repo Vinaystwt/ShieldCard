@@ -54,9 +54,7 @@ export function TopBar() {
     >
       <div className="mx-auto max-w-[1280px] px-6 h-14 flex items-center justify-between gap-6">
         {/* Left: wordmark */}
-        <Link href="/">
-          <WordMark size="sm" />
-        </Link>
+        <WordMark size="sm" />
 
         {/* Center: nav links (desktop) */}
         <nav className="hidden md:flex items-center gap-1">

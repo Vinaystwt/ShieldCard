@@ -36,6 +36,7 @@ export const targetChain = arbitrumSepolia;
 let _standaloneClient: ReturnType<typeof createPublicClient> | null = null;
 
 export function getStandalonePublicClient() {
+  if (typeof window === "undefined") return null;
   if (!_standaloneClient) {
     _standaloneClient = createPublicClient({
       chain: arbitrumSepolia,

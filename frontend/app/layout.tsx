@@ -3,12 +3,8 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { ClientProviders } from "@/providers/ClientProviders";
 import "./globals.css";
-
-const ClientProviders = dynamic(
-  () => import("@/providers/ClientProviders").then((m) => m.ClientProviders),
-  { ssr: false },
-);
 
 const DemoGuideOverlay = dynamic(
   () => import("@/components/shell/DemoGuideOverlay").then((m) => m.DemoGuideOverlay),

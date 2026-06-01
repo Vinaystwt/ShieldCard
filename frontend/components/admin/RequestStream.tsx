@@ -15,7 +15,7 @@ import { getEmployeeName } from "@/lib/constants";
 import type { RequestView } from "@/lib/contracts";
 
 interface RequestStreamProps {
-  requests: Array<{ id: bigint } & RequestView>;
+  requests?: Array<{ id: bigint } & RequestView>;
   onPublish: (
     requestId: bigint,
     statusHandle: string,
@@ -40,8 +40,9 @@ export function RequestStream({
   canPublish,
 }: RequestStreamProps) {
   const [actionMsg, setActionMsg] = useState<Record<string, string>>({});
+  const safeRequests = requests ?? [];
 
-  if (requests.length === 0) {
+  if (safeRequests.length === 0) {
     return (
       <EmptyState
         icon={FileText}
@@ -100,7 +101,7 @@ export function RequestStream({
           </tr>
         </thead>
         <tbody>
-          {requests.map((req, i) => {
+          {safeRequests.map((req, i) => {
             const key = req.id.toString();
             const isPublishing = publishingId === key;
             const isResolving = resolvingId === key;

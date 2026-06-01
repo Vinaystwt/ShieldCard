@@ -13,15 +13,16 @@ import type { DeptInfo, RequestView, VendorInfo } from "@/lib/contracts";
 import { FileCheck2 } from "lucide-react";
 
 interface RequestTableProps {
-  requests: Array<{ id: bigint } & RequestView>;
+  requests?: Array<{ id: bigint } & RequestView>;
   depts?: DeptInfo[];
   vendors?: VendorInfo[];
 }
 
 export function RequestTable({ requests, depts, vendors }: RequestTableProps) {
+  const safeRequests = requests ?? [];
   const deptNameById = new Map((depts ?? []).map((d) => [d.id, d.name]));
   const vendorNameById = new Map((vendors ?? []).map((v) => [v.id, v.name]));
-  if (requests.length === 0) {
+  if (safeRequests.length === 0) {
     return (
       <EmptyState
         icon={FileX}
@@ -49,7 +50,7 @@ export function RequestTable({ requests, depts, vendors }: RequestTableProps) {
           </tr>
         </thead>
         <tbody>
-          {requests.map((req, i) => {
+          {safeRequests.map((req, i) => {
             const packName = PACK_NAME[req.packId] ?? `Pack #${req.packId}`;
 
             return (

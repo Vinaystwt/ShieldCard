@@ -13,6 +13,7 @@ import { useShieldCard } from "@/hooks/useShieldCard";
 import { useCofhe } from "@/hooks/useCofhe";
 import {
   getShieldCardAddress,
+  getStandalonePublicClient,
   shieldCardAbi,
   auditorAbi,
   PACK_NAME,
@@ -24,7 +25,8 @@ import { getEmployeeName } from "@/lib/constants";
 
 export default function AuditorPage() {
   const { address } = useAccount();
-  const publicClient = usePublicClient({ chainId: targetChain.id });
+  const wagmiPublicClient = usePublicClient({ chainId: targetChain.id });
+  const publicClient = wagmiPublicClient ?? getStandalonePublicClient();
   const { requestsQuery } = useShieldCard();
   const { decryptStatus } = useCofhe();
   const runtimeAddress = getShieldCardAddress() as `0x${string}`;
@@ -74,7 +76,7 @@ export default function AuditorPage() {
   }, [publicClient, address, runtimeAddress]);
 
   const isAuditor = Boolean(
-    address && onChainAuditor && address.toLowerCase() === onChainAuditor.toLowerCase(),
+    address && onChainAuditor && (address?.toLowerCase() ?? "") === (onChainAuditor?.toLowerCase() ?? ""),
   );
 
   async function handleReveal(reqId: bigint, encStatus: string) {

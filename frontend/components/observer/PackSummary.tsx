@@ -14,13 +14,13 @@ interface PackData {
 }
 
 interface PackSummaryProps {
-  packs: PackData[];
+  packs?: PackData[];
   isLoading?: boolean;
   isError?: boolean;
 }
 
 export function PackSummary({ packs, isLoading, isError }: PackSummaryProps) {
-  const packMap = new Map(packs.map((p) => [p.id, p]));
+  const packMap = new Map((packs ?? []).map((p) => [p.id, p]));
 
   return (
     <div className="grid grid-cols-4 gap-3">
