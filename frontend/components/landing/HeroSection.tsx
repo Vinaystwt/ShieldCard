@@ -2,25 +2,19 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { HeroGraphic } from "./HeroGraphic";
 
-const HEADLINE_LINES = [
-  { text: "Corporate spend", accent: false },
-  { text: "control.", accent: true },
-  { text: "Nothing exposed.", accent: false },
-];
-
 const STATS = [
-  { value: "4 packs",   label: "policy tiers" },
-  { value: "3-tier",    label: "risk bitmap" },
   { value: "FHE-sealed", label: "amounts & limits" },
+  { value: "3-tier",     label: "risk routing" },
+  { value: "Testnet",    label: "MockUSDC settlement" },
 ];
 
 export function HeroSection() {
   return (
     <section className="relative min-h-[96vh] flex items-center overflow-hidden dot-grid">
-      {/* Ambient glow — right side */}
+      {/* Ambient glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -28,8 +22,6 @@ export function HeroSection() {
             "radial-gradient(ellipse 50% 60% at 68% 44%, rgba(200,131,63,0.07) 0%, rgba(110,144,178,0.03) 55%, transparent 75%)",
         }}
       />
-
-      {/* Subtle vignette edges */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -61,19 +53,19 @@ export function HeroSection() {
             </span>
           </motion.div>
 
-          {/* Headline — 3 lines with accent on "control." */}
+          {/* Headline */}
           <div className="mb-8">
-            {HEADLINE_LINES.map((line, i) => (
+            {["Corporate Treasury.", "Confidential by Design."].map((line, i) => (
               <motion.h1
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.18 + i * 0.13, ease: [0.16, 1, 0.3, 1] }}
-                className={`block leading-[1.04] font-bold tracking-[-0.035em] ${
-                  i === 2 ? "text-[62px]" : "text-[64px]"
-                } ${line.accent ? "text-gradient-copper" : "text-text"}`}
+                className={`block leading-[1.04] font-bold tracking-[-0.035em] text-[62px] ${
+                  i === 1 ? "text-gradient-copper" : "text-text"
+                }`}
               >
-                {line.text}
+                {line}
               </motion.h1>
             ))}
           </div>
@@ -82,59 +74,69 @@ export function HeroSection() {
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.58, ease: [0, 0, 0.2, 1] }}
-            className="text-[17px] leading-[1.65] mb-10 max-w-[460px]"
+            transition={{ duration: 0.5, delay: 0.48, ease: [0, 0, 0.2, 1] }}
+            className="text-[17px] leading-[1.65] mb-10 max-w-[480px]"
             style={{ color: "var(--color-muted)" }}
           >
-            ShieldCard enforces payment policy on encrypted data.
-            Spend amounts and pack limits stay private on-chain. Governance structure remains auditable.
+            ShieldCard enforces spend policy on encrypted data, settles approved spend on-chain,
+            and gives auditors exactly the access they need — nothing more.
           </motion.p>
 
           {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.70, ease: [0, 0, 0.2, 1] }}
-            className="flex items-center gap-4 mb-12"
+            transition={{ duration: 0.5, delay: 0.62, ease: [0, 0, 0.2, 1] }}
+            className="flex flex-wrap items-center gap-4 mb-12"
           >
             <Link
-              href="/app"
+              href="/deploy"
               className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-md text-[14px] font-semibold text-text transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] hover:brightness-110"
               style={{
                 background: "linear-gradient(135deg, #D09040 0%, #B86B2A 100%)",
-                boxShadow: "0 0 32px rgba(200,131,63,0.28), 0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12)",
+                boxShadow:
+                  "0 0 32px rgba(200,131,63,0.28), 0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12)",
               }}
             >
-              Open App
+              Deploy for Your Team
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/observer"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-md text-[14px] font-medium transition-colors duration-150 hover:text-text"
-              style={{
-                color: "var(--color-muted)",
-                border: "1px solid var(--border-mid)",
-              }}
+              style={{ color: "var(--color-muted)", border: "1px solid var(--border-mid)" }}
             >
-              <Lock className="w-3.5 h-3.5" />
-              Observer view
+              Explore Live Demo
             </Link>
+            <Link
+              href="/how-it-works"
+              className="inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors hover:text-text"
+              style={{ color: "var(--color-subtle)" }}
+            >
+              How It Works <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <a
+              href="https://github.com/Vinaystwt/ShieldCard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors hover:text-text"
+              style={{ color: "var(--color-subtle)" }}
+            >
+              <ExternalLink className="w-3.5 h-3.5" /> GitHub
+            </a>
           </motion.div>
 
           {/* Stats row */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.90 }}
+            transition={{ duration: 0.6, delay: 0.82 }}
             className="flex items-center gap-0"
           >
             {STATS.map((stat, i) => (
               <div key={i} className="flex items-center">
                 {i > 0 && (
-                  <div
-                    className="w-px h-8 mx-5"
-                    style={{ background: "var(--border-dim)" }}
-                  />
+                  <div className="w-px h-8 mx-5" style={{ background: "var(--border-dim)" }} />
                 )}
                 <div>
                   <p

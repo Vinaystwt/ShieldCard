@@ -175,9 +175,9 @@ export function useShieldCard() {
   const employeeRequestsQuery = useQuery({
     queryKey: ["shieldcard-employee-requests", shieldCardAddress, targetChain.id, address],
     enabled: Boolean(isConfigured && address),
-    staleTime: 5_000,
-    refetchInterval: isConfigured && address ? 12_000 : false,
-    retry: 2,
+    staleTime: 15_000,
+    refetchInterval: isConfigured && address ? 15_000 : false,
+    retry: 1,
     retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 8_000),
     queryFn: async () => {
       if (!publicClient || !shieldCardAddress || !address) return [];
@@ -238,8 +238,8 @@ export function useShieldCard() {
   const packsQuery = useQuery({
     queryKey: ["shieldcard-packs", shieldCardAddress, targetChain.id],
     enabled: isConfigured,
-    staleTime: 10_000,
-    refetchInterval: isConfigured ? 30_000 : false,
+    staleTime: 60_000,
+    refetchInterval: isConfigured ? 60_000 : false,
     queryFn: async () => {
       const packIds = await publicClient!.readContract({
         address: shieldCardAddress!,
@@ -284,8 +284,8 @@ export function useShieldCard() {
   const deptsQuery = useQuery({
     queryKey: ["shieldcard-depts", shieldCardAddress, targetChain.id],
     enabled: isConfigured,
-    staleTime: 15_000,
-    refetchInterval: isConfigured ? 30_000 : false,
+    staleTime: 60_000,
+    refetchInterval: isConfigured ? 60_000 : false,
     queryFn: async () => {
       const deptIds = await publicClient!.readContract({
         address: shieldCardAddress!,
@@ -318,8 +318,8 @@ export function useShieldCard() {
   const vendorsQuery = useQuery({
     queryKey: ["shieldcard-vendors", shieldCardAddress, targetChain.id],
     enabled: isConfigured,
-    staleTime: 15_000,
-    refetchInterval: isConfigured ? 30_000 : false,
+    staleTime: 60_000,
+    refetchInterval: isConfigured ? 60_000 : false,
     queryFn: async () => {
       const count = Number(await publicClient!.readContract({
         address: shieldCardAddress!,
@@ -361,7 +361,7 @@ export function useShieldCard() {
   const globalStateQuery = useQuery({
     queryKey: ["shieldcard-global", shieldCardAddress, targetChain.id],
     enabled: isConfigured,
-    staleTime: 15_000,
+    staleTime: 30_000,
     refetchInterval: isConfigured ? 30_000 : false,
     queryFn: async () => {
       const [isPaused, employeeCount] = await Promise.all([

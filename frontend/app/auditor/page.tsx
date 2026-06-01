@@ -27,6 +27,7 @@ export default function AuditorPage() {
   const { decryptStatus } = useCofhe();
 
   const [onChainAuditor, setOnChainAuditor] = useState<string | null>(null);
+  const [grantedIds, setGrantedIds] = useState<Set<string> | null>(null);
   const [decrypted, setDecrypted] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,25 @@ export default function AuditorPage() {
       }
     })();
   }, [publicClient]);
+
+  useEffect(() => {
+    if (!shieldCardAddress || !publicClient || !address) return;
+    (async () => {
+      try {
+        const logs = await publicClient.getLogs({
+          address: shieldCardAddress,
+          event: { type: "event", name: "DisclosureGranted", inputs: [{ name: "requestId", type: "uint256", indexed: true }, { name: "auditor", type: "address", indexed: true }] },
+          args: { auditor: address },
+          fromBlock: BigInt(0),
+          toBlock: "latest",
+        });
+        const ids = new Set(logs.map((l: any) => l.args.requestId?.toString() ?? ""));
+        setGrantedIds(ids);
+      } catch {
+        setGrantedIds(null);
+      }
+    })();
+  }, [publicClient, address]);
 
   const isAuditor = Boolean(
     address && onChainAuditor && address.toLowerCase() === onChainAuditor.toLowerCase(),
@@ -98,7 +118,10 @@ export default function AuditorPage() {
     URL.revokeObjectURL(url);
   }
 
-  const requests = requestsQuery.data ?? [];
+  const allRequests = requestsQuery.data ?? [];
+  const requests = grantedIds !== null
+    ? allRequests.filter((r) => grantedIds.has(r.id.toString()))
+    : allRequests;
   const proofReq = proofFocusId ? requests.find((r) => r.id.toString() === proofFocusId) : null;
   const proofDecrypted = proofFocusId ? decrypted[proofFocusId] : undefined;
 

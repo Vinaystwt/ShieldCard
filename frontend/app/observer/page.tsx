@@ -43,6 +43,12 @@ export default function ObserverPage() {
                 >
                   Observer lens
                 </span>
+                <span
+                  className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-medium"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-dim)", color: "var(--color-subtle)" }}
+                >
+                  Public view · no wallet required
+                </span>
               </div>
               <h1
                 className="text-[30px] font-bold tracking-[-0.025em] leading-snug mb-2"

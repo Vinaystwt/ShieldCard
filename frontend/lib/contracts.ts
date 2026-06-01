@@ -847,6 +847,7 @@ export const auditorAbi = [
   { type: "function", name: "grantAuditorAccess", stateMutability: "nonpayable", inputs: [{ name: "requestIds", type: "uint256[]" }], outputs: [] },
   { type: "function", name: "setAdmin", stateMutability: "nonpayable", inputs: [{ name: "newAdmin", type: "address" }], outputs: [] },
   { type: "function", name: "grantAdminAccess", stateMutability: "nonpayable", inputs: [{ name: "requestIds", type: "uint256[]" }], outputs: [] },
+  { type: "event", name: "DisclosureGranted", inputs: [{ name: "requestId", type: "uint256", indexed: true }, { name: "auditor", type: "address", indexed: true }] },
 ] as const satisfies Abi;
 
 // Receipt verification helper (matches contract's _finaliseRequest keccak256 packing)

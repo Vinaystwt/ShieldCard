@@ -59,23 +59,23 @@ export function CtaStrip() {
                 Live on Arbitrum Sepolia
               </p>
               <h2 className="text-[40px] font-bold tracking-[-0.025em] leading-[1.08] mb-4" style={{ color: "var(--color-text)" }}>
-                See it live.<br />Nothing to trust.
+                Deploy Your Confidential<br />Treasury in Minutes.
               </h2>
               <p className="text-[16px] leading-relaxed" style={{ color: "var(--color-muted)" }}>
-                Connect a wallet, submit an encrypted request, and privately decrypt your result.
-                Real FHE evaluation — nothing simulated.
+                Three contracts on Arbitrum Sepolia. Encrypted policy enforcement, scoped auditor
+                access, and a tamper-evident settlement rail — live in under two minutes.
               </p>
             </div>
             <div className="flex flex-col items-end gap-3 shrink-0">
               <Link
-                href="/app"
+                href="/deploy"
                 className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-md text-[14px] font-semibold text-text transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] hover:brightness-110"
                 style={{
                   background: "linear-gradient(135deg, #D09040 0%, #B86B2A 100%)",
                   boxShadow: "0 0 32px rgba(200,131,63,0.28), 0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12)",
                 }}
               >
-                Open App
+                Deploy for Your Team
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
