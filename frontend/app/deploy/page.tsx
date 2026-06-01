@@ -131,12 +131,16 @@ export default function DeployPage() {
 
       // Step 1: Deploy MockUSDC
       setStep(0, { status: "pending" });
+      const fees1 = await deploymentPublicClient.estimateFeesPerGas();
       const usdcHash = await walletClient.deployContract({
         abi: mockUSDCAbi,
         bytecode: MOCK_USDC_BYTECODE,
         args: [],
         chain: arbitrumSepolia,
         account: address as `0x${string}`,
+        maxFeePerGas: fees1.maxFeePerGas,
+        maxPriorityFeePerGas: fees1.maxPriorityFeePerGas,
+        gas: undefined,
       });
       setStep(0, { txHash: usdcHash });
       const usdcReceipt = await deploymentPublicClient.waitForTransactionReceipt({
@@ -152,12 +156,16 @@ export default function DeployPage() {
 
       // Step 2: Deploy ShieldCardControlPlane
       setStep(1, { status: "pending" });
+      const fees2 = await deploymentPublicClient.estimateFeesPerGas();
       const coreHash = await walletClient.deployContract({
         abi: controlPlaneAbi,
         bytecode: CONTROL_PLANE_BYTECODE,
         args: [],
         chain: arbitrumSepolia,
         account: address as `0x${string}`,
+        maxFeePerGas: fees2.maxFeePerGas,
+        maxPriorityFeePerGas: fees2.maxPriorityFeePerGas,
+        gas: undefined,
       });
       setStep(1, { txHash: coreHash });
       const coreReceipt = await deploymentPublicClient.waitForTransactionReceipt({
@@ -173,12 +181,16 @@ export default function DeployPage() {
 
       // Step 3: Deploy ShieldCardSettlement
       setStep(2, { status: "pending" });
+      const fees3 = await deploymentPublicClient.estimateFeesPerGas();
       const settlementHash = await walletClient.deployContract({
         abi: settlementAbi,
         bytecode: SETTLEMENT_BYTECODE,
         args: [coreAddr, usdcAddr],
         chain: arbitrumSepolia,
         account: address as `0x${string}`,
+        maxFeePerGas: fees3.maxFeePerGas,
+        maxPriorityFeePerGas: fees3.maxPriorityFeePerGas,
+        gas: undefined,
       });
       setStep(2, { txHash: settlementHash });
       const settlementReceipt = await deploymentPublicClient.waitForTransactionReceipt({
@@ -207,6 +219,8 @@ export default function DeployPage() {
         friendly = "Transaction cancelled. Click Deploy to try again.";
       } else if (/insufficient funds|insufficient balance/i.test(raw)) {
         friendly = "Not enough ETH for gas. Get testnet ETH at faucet.triangleplatform.com/arbitrum/sepolia";
+      } else if (/maxFeePerGas|fee cap|base fee/i.test(raw)) {
+        friendly = "Gas fee error. Click Reset and try again — the network fee has been refreshed.";
       } else if (/could not fetch|timeout|disconnected/i.test(raw)) {
         friendly = "Network error. Check your RPC connection, then try again.";
       } else {
