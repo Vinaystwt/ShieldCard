@@ -8,7 +8,7 @@
 
 <br/>
 
-[![Live App](https://img.shields.io/badge/Live%20App-shieldcard--fhenix.netlify.app-C8833F?style=flat-square&logo=netlify&logoColor=white)](https://shieldcard-fhenix.netlify.app)
+[![Live App](https://img.shields.io/badge/Live%20App-shieldcard.xyz-C8833F?style=flat-square&logo=vercel&logoColor=white)](https://shieldcard.xyz)
 [![Core](https://img.shields.io/badge/Core-0xC2fe...9dD2-6E90B2?style=flat-square)](https://sepolia.arbiscan.io/address/0xC2fe512fE0A4D0Aa0C7452aC43e76aB9331f9dD2)
 [![Settlement](https://img.shields.io/badge/Settlement-0x8054...23A-6E90B2?style=flat-square)](https://sepolia.arbiscan.io/address/0x8054d6819fa4B43195353579e9519Dd7bc16223A)
 [![Network](https://img.shields.io/badge/Network-Arbitrum%20Sepolia-2B4DA8?style=flat-square)](https://sepolia.arbiscan.io)
@@ -16,6 +16,20 @@
 [![License](https://img.shields.io/badge/License-MIT-white?style=flat-square)](./LICENSE)
 
 </div>
+
+---
+
+## Quick Demo
+
+**Live app:** https://shieldcard.xyz
+
+**Verify a request yourself** (no wallet needed):
+https://shieldcard.xyz/verify?id=0
+
+**Deploy your own instance:**
+https://shieldcard.xyz/deploy
+
+**Demo video:** [Wave 5 Demo](https://youtu.be/_Nflr2H00-8)
 
 ---
 
@@ -361,7 +375,7 @@ cd frontend && pnpm dev        # http://localhost:3000
 | Dept attestations | 3 |
 | Pack attestations | 4 |
 
-**Demo verify:** `http://localhost:3000/verify?id=0` → green "Receipt verified" + settlement chain verified.
+**Demo verify:** https://shieldcard.xyz/verify?id=0 → green "Receipt verified" + settlement chain verified.
 
 ---
 
@@ -369,4 +383,6 @@ cd frontend && pnpm dev        # http://localhost:3000
 <img src="./brand-assets/shieldcard-logo.svg" alt="ShieldCard" width="48"/>
 <br/><br/>
 <sub>Built for the Fhenix Buildathon · FHE-encrypted compute, public accountability · Arbitrum Sepolia · MIT License</sub>
+<br/>
+<sub>Built by <a href="https://twitter.com/vinaystwt">Vinay</a></sub>
 </div>

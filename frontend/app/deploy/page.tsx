@@ -415,7 +415,12 @@ export default function DeployPage() {
           <p className="text-[14px] leading-relaxed text-muted">
             Several Web3 teams are currently in private testing with ShieldCard, managing their
             internal treasury operations with confidential spend controls. Interested in early
-            access for your team? Reach out via GitHub or Twitter.
+            access for your team? Reach out via{" "}
+            <a href="https://github.com/Vinaystwt/ShieldCard" target="_blank" rel="noopener noreferrer"
+              style={{ color: "var(--color-copper)" }} className="hover:underline">GitHub</a>
+            {" "}or{" "}
+            <a href="https://twitter.com/vinaystwt" target="_blank" rel="noopener noreferrer"
+              style={{ color: "var(--color-copper)" }} className="hover:underline">Twitter</a>.
           </p>
         </motion.div>
 
