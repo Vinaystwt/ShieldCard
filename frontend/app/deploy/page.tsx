@@ -5,12 +5,14 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAccount, usePublicClient, useChainId, useBalance, useSwitchChain, useWalletClient } from "wagmi";
+import { getWalletClient } from "@wagmi/core";
+import { useAccount, usePublicClient, useChainId, useBalance, useSwitchChain } from "wagmi";
 import type { Abi } from "viem";
 import { CheckCircle2, Circle, ExternalLink, Lock, ReceiptText, ShieldCheck, Users, Loader2, ArrowRight } from "lucide-react";
 import { TopBar } from "@/components/shell/TopBar";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { WalletButton } from "@/components/wallet/WalletButton";
+import { config } from "@/providers/Web3Provider";
 import { targetChain } from "@/lib/contracts";
 import mockUsdcArtifact from "../_artifacts/MockUSDC.json";
 import controlPlaneArtifact from "../_artifacts/ShieldCardControlPlane.json";
@@ -59,7 +61,6 @@ export default function DeployPage() {
   const chainId = useChainId();
   const { switchChain, switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
   const publicClient = usePublicClient({ chainId: targetChain.id });
-  const { data: walletClient } = useWalletClient({ chainId: targetChain.id });
   const { data: balance } = useBalance({ address, chainId: targetChain.id });
 
   const [steps, setSteps] = useState<DeployStep[]>([
@@ -93,11 +94,18 @@ export default function DeployPage() {
     setDeployError(null);
 
     try {
+      const walletClient = await getWalletClient(config, { chainId: targetChain.id });
+      if (!walletClient) {
+        setDeployError(
+          "Wallet client unavailable. Disconnect and reconnect " +
+            "your wallet in MetaMask, then try again.",
+        );
+        setSteps((prev) => prev.map((s) => (s.status === "pending" ? { ...s, status: "error" } : s)));
+        return;
+      }
+
       if (chainId !== targetChain.id) {
         await switchChainAsync({ chainId: targetChain.id });
-      }
-      if (!walletClient) {
-        throw new Error("Wallet client unavailable. Reconnect your wallet and try again.");
       }
 
       // Step 1: Deploy MockUSDC

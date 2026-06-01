@@ -7,7 +7,7 @@ import { http } from "viem";
 
 import { targetChain } from "@/lib/contracts";
 
-const config = createConfig({
+export const config = createConfig({
   chains: [targetChain],
   connectors: [
     injected({
