@@ -92,7 +92,11 @@ export default function DeployPage() {
   }
 
   async function handleDeploy() {
-    if (!address || !publicClient || !isConnected) return;
+    if (!address || !isConnected) return;
+    if (!publicClient) {
+      setDeployError("Public client unavailable. Refresh the page and try again.");
+      return;
+    }
     setDeploying(true);
     setDeployError(null);
 
@@ -127,8 +131,14 @@ export default function DeployPage() {
         account: address as `0x${string}`,
       });
       setStep(0, { txHash: usdcHash });
-      const usdcReceipt = await publicClient.waitForTransactionReceipt({ hash: usdcHash, confirmations: 1 });
-      const usdcAddr = usdcReceipt.contractAddress!;
+      const usdcReceipt = await publicClient.waitForTransactionReceipt({
+        hash: usdcHash,
+        confirmations: 2,
+      });
+      if (!usdcReceipt.contractAddress) {
+        throw new Error("MockUSDC deployment failed — no contract address in receipt");
+      }
+      const usdcAddr = usdcReceipt.contractAddress;
       setStep(0, { status: "done", address: usdcAddr, txHash: usdcHash });
 
       // Step 2: Deploy ShieldCardControlPlane
@@ -141,8 +151,14 @@ export default function DeployPage() {
         account: address as `0x${string}`,
       });
       setStep(1, { txHash: coreHash });
-      const coreReceipt = await publicClient.waitForTransactionReceipt({ hash: coreHash, confirmations: 1 });
-      const coreAddr = coreReceipt.contractAddress!;
+      const coreReceipt = await publicClient.waitForTransactionReceipt({
+        hash: coreHash,
+        confirmations: 2,
+      });
+      if (!coreReceipt.contractAddress) {
+        throw new Error("ShieldCardControlPlane deployment failed — no contract address");
+      }
+      const coreAddr = coreReceipt.contractAddress;
       setStep(1, { status: "done", address: coreAddr, txHash: coreHash });
 
       // Step 3: Deploy ShieldCardSettlement
@@ -155,8 +171,14 @@ export default function DeployPage() {
         account: address as `0x${string}`,
       });
       setStep(2, { txHash: settlementHash });
-      const settlementReceipt = await publicClient.waitForTransactionReceipt({ hash: settlementHash, confirmations: 1 });
-      const settlementAddr = settlementReceipt.contractAddress!;
+      const settlementReceipt = await publicClient.waitForTransactionReceipt({
+        hash: settlementHash,
+        confirmations: 2,
+      });
+      if (!settlementReceipt.contractAddress) {
+        throw new Error("ShieldCardSettlement deployment failed — no contract address");
+      }
+      const settlementAddr = settlementReceipt.contractAddress;
       setStep(2, { status: "done", address: settlementAddr, txHash: settlementHash });
 
       // Step 4: Save to localStorage
