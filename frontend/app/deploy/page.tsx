@@ -8,12 +8,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getWalletClient } from "@wagmi/core";
 import { useAccount, usePublicClient, useChainId, useBalance, useSwitchChain } from "wagmi";
 import type { Abi } from "viem";
+import { arbitrumSepolia } from "viem/chains";
 import { CheckCircle2, Circle, ExternalLink, Lock, ReceiptText, ShieldCheck, Users, Loader2, ArrowRight } from "lucide-react";
 import { TopBar } from "@/components/shell/TopBar";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { WalletButton } from "@/components/wallet/WalletButton";
 import { config } from "@/providers/Web3Provider";
-import { targetChain } from "@/lib/contracts";
 import mockUsdcArtifact from "../_artifacts/MockUSDC.json";
 import controlPlaneArtifact from "../_artifacts/ShieldCardControlPlane.json";
 import settlementArtifact from "../_artifacts/ShieldCardSettlement.json";
@@ -60,8 +60,8 @@ export default function DeployPage() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain, switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
-  const publicClient = usePublicClient({ chainId: targetChain.id });
-  const { data: balance } = useBalance({ address, chainId: targetChain.id });
+  const publicClient = usePublicClient({ chainId: arbitrumSepolia.id });
+  const { data: balance } = useBalance({ address, chainId: arbitrumSepolia.id });
 
   const [steps, setSteps] = useState<DeployStep[]>([
     { label: "Deploy MockUSDC", status: "idle" },
@@ -73,16 +73,19 @@ export default function DeployPage() {
   const [deploying, setDeploying] = useState(false);
   const [deployError, setDeployError] = useState<string | null>(null);
 
-  const isRightNetwork = chainId === targetChain.id;
-  const hasFunds = balance ? balance.value > BigInt(10_000_000_000_000_000) : false; // 0.01 ETH
+  const isCorrectChain = chainId === arbitrumSepolia.id;
+  const hasSufficientEth = balance ? balance.value > BigInt(10_000_000_000_000_000) : false; // 0.01 ETH
+
+  console.log("chainId:", chainId, "expected:", arbitrumSepolia.id, "match:", chainId === arbitrumSepolia.id);
 
   const prereqs = [
     { label: "MetaMask connected", done: isConnected },
-    { label: "Arbitrum Sepolia network", done: isRightNetwork },
-    { label: "Testnet ETH available (≥ 0.01 ETH)", done: hasFunds },
+    { label: "Arbitrum Sepolia network", done: isCorrectChain },
+    { label: "Testnet ETH available (≥ 0.01 ETH)", done: hasSufficientEth },
   ];
 
-  const allPrereqsMet = prereqs.every((p) => p.done);
+  const allPrereqsMet = isConnected && isCorrectChain && hasSufficientEth;
+  const canStartDeploy = isConnected && (!isCorrectChain || hasSufficientEth);
 
   function setStep(index: number, patch: Partial<DeployStep>) {
     setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
@@ -94,18 +97,24 @@ export default function DeployPage() {
     setDeployError(null);
 
     try {
-      const walletClient = await getWalletClient(config, { chainId: targetChain.id });
+      if (!isCorrectChain) {
+        try {
+          await switchChainAsync({ chainId: arbitrumSepolia.id });
+          return;
+        } catch {
+          setDeployError("Could not switch network. Please switch to Arbitrum Sepolia manually in your wallet.");
+          setStep(0, { status: "error" });
+          return;
+        }
+      }
+
+      const walletClient = await getWalletClient(config);
       if (!walletClient) {
         setDeployError(
-          "Wallet client unavailable. Disconnect and reconnect " +
-            "your wallet in MetaMask, then try again.",
+          "Wallet client unavailable. Reconnect your wallet and try again.",
         );
         setSteps((prev) => prev.map((s) => (s.status === "pending" ? { ...s, status: "error" } : s)));
         return;
-      }
-
-      if (chainId !== targetChain.id) {
-        await switchChainAsync({ chainId: targetChain.id });
       }
 
       // Step 1: Deploy MockUSDC
@@ -114,7 +123,7 @@ export default function DeployPage() {
         abi: mockUSDCAbi,
         bytecode: MOCK_USDC_BYTECODE,
         args: [],
-        chain: targetChain,
+        chain: arbitrumSepolia,
         account: address as `0x${string}`,
       });
       setStep(0, { txHash: usdcHash });
@@ -128,7 +137,7 @@ export default function DeployPage() {
         abi: controlPlaneAbi,
         bytecode: CONTROL_PLANE_BYTECODE,
         args: [],
-        chain: targetChain,
+        chain: arbitrumSepolia,
         account: address as `0x${string}`,
       });
       setStep(1, { txHash: coreHash });
@@ -142,7 +151,7 @@ export default function DeployPage() {
         abi: settlementAbi,
         bytecode: SETTLEMENT_BYTECODE,
         args: [coreAddr, usdcAddr],
-        chain: targetChain,
+        chain: arbitrumSepolia,
         account: address as `0x${string}`,
       });
       setStep(2, { txHash: settlementHash });
@@ -229,7 +238,7 @@ export default function DeployPage() {
                 {i === 1 && !p.done && isConnected && (
                   <div className="ml-auto">
                     <button
-                      onClick={() => switchChain({ chainId: targetChain.id })}
+                      onClick={() => switchChain({ chainId: arbitrumSepolia.id })}
                       disabled={isSwitchingNetwork}
                       className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all hover:brightness-110 disabled:opacity-50"
                       style={{ background: "rgba(200,131,63,0.10)", border: "1px solid var(--copper-border-dim)", color: "var(--color-copper)" }}
@@ -238,7 +247,7 @@ export default function DeployPage() {
                     </button>
                   </div>
                 )}
-                {i === 2 && !p.done && isConnected && isRightNetwork && (
+                {i === 2 && !p.done && isConnected && isCorrectChain && (
                   <a
                     href="https://faucet.triangleplatform.com/arbitrum/sepolia"
                     target="_blank"
@@ -299,11 +308,17 @@ export default function DeployPage() {
 
               <button
                 onClick={handleDeploy}
-                disabled={!allPrereqsMet || deploying}
+                disabled={!canStartDeploy || deploying}
                 className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-[14px] font-semibold transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: "rgba(200,131,63,0.12)", border: "1px solid var(--copper-border-dim)", color: "var(--color-copper)" }}
               >
-                {deploying ? <><Loader2 className="w-4 h-4 animate-spin" /> Deploying...</> : <>Deploy All Contracts <ArrowRight className="w-4 h-4" /></>}
+                {deploying ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Deploying...</>
+                ) : !isCorrectChain && isConnected ? (
+                  <>Switch Network <ArrowRight className="w-4 h-4" /></>
+                ) : (
+                  <>Deploy All Contracts <ArrowRight className="w-4 h-4" /></>
+                )}
               </button>
             </motion.div>
           ) : (

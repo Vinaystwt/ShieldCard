@@ -4,20 +4,19 @@ import { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, injected } from "wagmi";
 import { http } from "viem";
-
-import { targetChain } from "@/lib/contracts";
+import { arbitrumSepolia } from "viem/chains";
 
 export const config = createConfig({
-  chains: [targetChain],
+  chains: [arbitrumSepolia],
   connectors: [
     injected({
       shimDisconnect: true,
     }),
   ],
   transports: {
-    [targetChain.id]: http(
+    [arbitrumSepolia.id]: http(
       process.env.NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL ||
-        targetChain.rpcUrls.default.http[0],
+        arbitrumSepolia.rpcUrls.default.http[0],
       { timeout: 12_000 },
     ),
   },
