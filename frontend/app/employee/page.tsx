@@ -2,10 +2,11 @@
 
 export const dynamic = "force-dynamic";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Lock, RefreshCw, Snowflake, PauseCircle } from "lucide-react";
 import { useChainId } from "wagmi";
-import { TopBar } from "@/components/shell/TopBar";
+import { AppHeader } from "@/components/shell/AppHeader";
 import { RequestComposer } from "@/components/employee/RequestComposer";
 import { RequestHistory } from "@/components/employee/RequestHistory";
 import { SwitchNetworkButton } from "@/components/ui/SwitchNetworkButton";
@@ -18,7 +19,9 @@ import { getErrorMessage } from "@/lib/format";
 export default function EmployeePage() {
   const { isConfigured, employeeRequestsQuery, submitRequest, roleQuery, deptsQuery, vendorsQuery } = useShieldCard();
   const { isEmployee } = useRoleRouting();
-  const { decryptStatus, encryptAmount, error, isReady } = useCofhe();
+  const { decryptStatus, encryptAmount, error, isReady, requestInit } = useCofhe();
+  // Trigger CoFHE init — employee page always needs encrypt/decrypt
+  useEffect(() => { requestInit(); }, [requestInit]);
   const chainId = useChainId();
   const requests = employeeRequestsQuery.data ?? [];
   const isWrongNetwork = chainId !== targetChain.id;
@@ -58,7 +61,7 @@ export default function EmployeePage() {
 
   return (
     <div className="min-h-screen bg-base">
-      <TopBar />
+      <AppHeader />
       <main className="mx-auto max-w-[1280px] px-6 py-10">
         {/* Page header */}
         <motion.div

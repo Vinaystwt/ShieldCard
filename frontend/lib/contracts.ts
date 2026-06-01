@@ -1,6 +1,8 @@
 import type { Abi } from "viem";
 import { arbitrumSepolia } from "wagmi/chains";
+import { getInstanceAddress, getSettlementAddress as _getSettlementAddress, getMockUsdcAddress as _getMockUsdcAddress } from "./instance";
 
+// Build-time constants (env vars baked in at build) — kept for SSR fallback
 export const shieldCardAddress =
   (process.env.NEXT_PUBLIC_SHIELDCARD_ADDRESS as `0x${string}` | undefined) ??
   undefined;
@@ -12,6 +14,22 @@ export const settlementAddress =
 export const mockUsdcAddress =
   (process.env.NEXT_PUBLIC_MOCKUSDC_ADDRESS as `0x${string}` | undefined) ??
   undefined;
+
+// Runtime getters — read localStorage first, then fall back to env constants
+export function getShieldCardAddress(): `0x${string}` | undefined {
+  const addr = getInstanceAddress();
+  return addr ? (addr as `0x${string}`) : shieldCardAddress;
+}
+
+export function getRuntimeSettlementAddress(): `0x${string}` | undefined {
+  const addr = _getSettlementAddress();
+  return addr ? (addr as `0x${string}`) : settlementAddress;
+}
+
+export function getRuntimeMockUsdcAddress(): `0x${string}` | undefined {
+  const addr = _getMockUsdcAddress();
+  return addr ? (addr as `0x${string}`) : mockUsdcAddress;
+}
 
 export const targetChain = arbitrumSepolia;
 

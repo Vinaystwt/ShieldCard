@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { Banknote, Link2, ExternalLink, CheckCircle, Clock, Loader2, AlertCircle } from "lucide-react";
 
-import { TopBar } from "@/components/shell/TopBar";
+import { AppHeader } from "@/components/shell/AppHeader";
 import { useShieldCard } from "@/hooks/useShieldCard";
 import {
   shieldCardAddress,
@@ -164,7 +164,7 @@ export default function SettlementPage() {
 
   return (
     <div className="min-h-screen bg-base">
-      <TopBar />
+      <AppHeader />
       <main className="mx-auto max-w-[1280px] px-6 py-10">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-2 mb-3">

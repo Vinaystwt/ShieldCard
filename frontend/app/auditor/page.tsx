@@ -7,11 +7,11 @@ import { motion } from "framer-motion";
 import { useAccount, usePublicClient } from "wagmi";
 import { Eye, EyeOff, Lock, ShieldCheck, Download, Loader2, SplitSquareHorizontal } from "lucide-react";
 
-import { TopBar } from "@/components/shell/TopBar";
+import { AppHeader } from "@/components/shell/AppHeader";
 import { useShieldCard } from "@/hooks/useShieldCard";
 import { useCofhe } from "@/hooks/useCofhe";
 import {
-  shieldCardAddress,
+  getShieldCardAddress,
   shieldCardAbi,
   auditorAbi,
   PACK_NAME,
@@ -19,26 +19,29 @@ import {
   targetChain,
 } from "@/lib/contracts";
 import { truncateAddress, truncateHandle } from "@/lib/format";
+import { getEmployeeName } from "@/lib/constants";
 
 export default function AuditorPage() {
   const { address } = useAccount();
   const publicClient = usePublicClient({ chainId: targetChain.id });
   const { requestsQuery } = useShieldCard();
   const { decryptStatus } = useCofhe();
+  const runtimeAddress = getShieldCardAddress();
 
   const [onChainAuditor, setOnChainAuditor] = useState<string | null>(null);
-  const [grantedIds, setGrantedIds] = useState<Set<string> | null>(null);
+  // null = not loaded yet (loading), undefined = loaded but error, Set = loaded OK
+  const [grantedIds, setGrantedIds] = useState<Set<string> | null | undefined>(null);
   const [decrypted, setDecrypted] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [proofFocusId, setProofFocusId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!shieldCardAddress || !publicClient) return;
+    if (!runtimeAddress || !publicClient) return;
     (async () => {
       try {
         const addr = await publicClient.readContract({
-          address: shieldCardAddress,
+          address: runtimeAddress,
           abi: [...shieldCardAbi, ...auditorAbi] as any,
           functionName: "auditor",
         }) as string;
@@ -47,14 +50,14 @@ export default function AuditorPage() {
         setOnChainAuditor(null);
       }
     })();
-  }, [publicClient]);
+  }, [publicClient, runtimeAddress]);
 
   useEffect(() => {
-    if (!shieldCardAddress || !publicClient || !address) return;
+    if (!runtimeAddress || !publicClient || !address) return;
     (async () => {
       try {
         const logs = await publicClient.getLogs({
-          address: shieldCardAddress,
+          address: runtimeAddress,
           event: { type: "event", name: "DisclosureGranted", inputs: [{ name: "requestId", type: "uint256", indexed: true }, { name: "auditor", type: "address", indexed: true }] },
           args: { auditor: address },
           fromBlock: BigInt(0),
@@ -63,10 +66,11 @@ export default function AuditorPage() {
         const ids = new Set(logs.map((l: any) => l.args.requestId?.toString() ?? ""));
         setGrantedIds(ids);
       } catch {
-        setGrantedIds(null);
+        // undefined = error state — show empty, not all requests
+        setGrantedIds(undefined);
       }
     })();
-  }, [publicClient, address]);
+  }, [publicClient, address, runtimeAddress]);
 
   const isAuditor = Boolean(
     address && onChainAuditor && address.toLowerCase() === onChainAuditor.toLowerCase(),
@@ -89,7 +93,7 @@ export default function AuditorPage() {
   function downloadPacket(req: any) {
     const packet = {
       requestId:         req.id.toString(),
-      contractAddress:   shieldCardAddress,
+      contractAddress:   runtimeAddress,
       network:           "Arbitrum Sepolia",
       chainId:           targetChain.id,
       employee:          req.employee,
@@ -119,15 +123,18 @@ export default function AuditorPage() {
   }
 
   const allRequests = requestsQuery.data ?? [];
-  const requests = grantedIds !== null
+  // null = loading grants, undefined = error loading grants, Set = loaded
+  // Never fall back to allRequests — always show only explicitly granted requests
+  const grantsLoading = grantedIds === null;
+  const requests = grantedIds instanceof Set
     ? allRequests.filter((r) => grantedIds.has(r.id.toString()))
-    : allRequests;
+    : [];
   const proofReq = proofFocusId ? requests.find((r) => r.id.toString() === proofFocusId) : null;
   const proofDecrypted = proofFocusId ? decrypted[proofFocusId] : undefined;
 
   return (
     <div className="min-h-screen bg-base">
-      <TopBar />
+      <AppHeader />
       <main className="mx-auto max-w-[1280px] px-6 py-10">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-2 mb-3">
@@ -184,9 +191,14 @@ export default function AuditorPage() {
               </tr>
             </thead>
             <tbody>
-              {requests.length === 0 && (
+              {grantsLoading && (
                 <tr><td colSpan={7} className="px-4 py-8 text-center text-[12px]" style={{ color: "var(--color-subtle)" }}>
-                  Loading requests…
+                  Loading disclosure grants…
+                </td></tr>
+              )}
+              {!grantsLoading && requests.length === 0 && (
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-[12px]" style={{ color: "var(--color-subtle)" }}>
+                  No disclosure grants found for this wallet. The admin must grant access via Admin → Auditor panel.
                 </td></tr>
               )}
               {requests.map((req) => {
@@ -202,7 +214,7 @@ export default function AuditorPage() {
                       background: isFocus ? "rgba(110,144,178,0.05)" : "transparent",
                     }}>
                     <td className="px-4 py-3 font-mono" style={{ color: "var(--color-subtle)" }}>#{req.id.toString()}</td>
-                    <td className="px-4 py-3 font-mono" style={{ color: "var(--color-muted)" }}>{truncateAddress(req.employee)}</td>
+                    <td className="px-4 py-3 font-mono" style={{ color: "var(--color-muted)" }}>{getEmployeeName(req.employee) !== req.employee ? getEmployeeName(req.employee) : truncateAddress(req.employee)}</td>
                     <td className="px-4 py-3" style={{ color: "var(--color-muted)" }}>{PACK_NAME[req.packId] ?? `Pack #${req.packId}`}</td>
                     <td className="px-4 py-3" style={{ color: "var(--color-muted)" }}>{statusLabel(req.publicStatus, req.inReview)}</td>
                     <td className="px-4 py-3 font-mono text-[11px]" style={{ color: "var(--color-subtle)" }}>
@@ -280,7 +292,7 @@ export default function AuditorPage() {
                   <div className="space-y-2">
                     {[
                       { label: "Request ID",  value: `#${proofFocusId}` },
-                      { label: "Employee",    value: truncateAddress(proofReq.employee) },
+                      { label: "Employee",    value: getEmployeeName(proofReq.employee) !== proofReq.employee ? getEmployeeName(proofReq.employee) : truncateAddress(proofReq.employee) },
                       { label: "Pack",        value: PACK_NAME[proofReq.packId] ?? `Pack #${proofReq.packId}` },
                       { label: "Public status", value: statusLabel(proofReq.publicStatus, proofReq.inReview) },
                       { label: "Amount",      value: "🔒 sealed" },
@@ -302,7 +314,7 @@ export default function AuditorPage() {
                     <div className="space-y-2">
                       {[
                         { label: "Request ID",  value: `#${proofFocusId}` },
-                        { label: "Employee",    value: truncateAddress(proofReq.employee) },
+                        { label: "Employee",    value: getEmployeeName(proofReq.employee) !== proofReq.employee ? getEmployeeName(proofReq.employee) : truncateAddress(proofReq.employee) },
                         { label: "Pack",        value: PACK_NAME[proofReq.packId] ?? `Pack #${proofReq.packId}` },
                         { label: "Public status", value: statusLabel(proofReq.publicStatus, proofReq.inReview) },
                         { label: "Amount",      value: "🔒 sealed (amount not disclosed)" },

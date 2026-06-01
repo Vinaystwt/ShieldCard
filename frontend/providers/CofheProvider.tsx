@@ -30,12 +30,15 @@ type CofheContextValue = {
   client: CofheClient | null;
   isReady: boolean;
   error: string | null;
+  /** Call to trigger CoFHE initialization. Safe to call multiple times. */
+  requestInit: () => void;
 };
 
 const CofheContext = createContext<CofheContextValue>({
   client: null,
   isReady: false,
   error: null,
+  requestInit: () => {},
 });
 
 export function CofheProvider({ children }: { children: ReactNode }) {
@@ -44,8 +47,13 @@ export function CofheProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<CofheClient | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Lazy: only init when a page explicitly requests it (e.g. employee, admin)
+  const [initRequested, setInitRequested] = useState(false);
+
+  const requestInit = useMemo(() => () => setInitRequested(true), []);
 
   useEffect(() => {
+    if (!initRequested) return;
     let active = true;
 
     async function init() {
@@ -101,9 +109,12 @@ export function CofheProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [publicClient, walletClient]);
+  }, [publicClient, walletClient, initRequested]);
 
-  const value = useMemo(() => ({ client, isReady, error }), [client, error, isReady]);
+  const value = useMemo(
+    () => ({ client, isReady, error, requestInit }),
+    [client, error, isReady, requestInit],
+  );
   return <CofheContext.Provider value={value}>{children}</CofheContext.Provider>;
 }
 

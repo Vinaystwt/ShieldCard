@@ -11,6 +11,7 @@ import { RiskBadge } from "@/components/ui/RiskBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatTimestamp, truncateAddress } from "@/lib/format";
 import { PACK_NAME } from "@/lib/contracts";
+import { getEmployeeName } from "@/lib/constants";
 import type { RequestView } from "@/lib/contracts";
 
 interface RequestStreamProps {
@@ -119,7 +120,7 @@ export function RequestStream({
                   <span className="font-mono" style={{ color: "var(--color-subtle)" }}>#{key}</span>
                 </td>
                 <td className="py-3.5 pr-4">
-                  <span className="font-mono" style={{ color: "var(--color-muted)" }}>{truncateAddress(req.employee)}</span>
+                  <span className="font-mono" style={{ color: "var(--color-muted)" }}>{getEmployeeName(req.employee) !== req.employee ? getEmployeeName(req.employee) : truncateAddress(req.employee)}</span>
                 </td>
                 <td className="py-3.5 pr-4">
                   <span

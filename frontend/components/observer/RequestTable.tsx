@@ -8,6 +8,7 @@ import { RiskBadge } from "@/components/ui/RiskBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatTimestamp, truncateAddress } from "@/lib/format";
 import { PACK_NAME } from "@/lib/contracts";
+import { getEmployeeName, getVendorName } from "@/lib/constants";
 import type { DeptInfo, RequestView, VendorInfo } from "@/lib/contracts";
 import { FileCheck2 } from "lucide-react";
 
@@ -64,7 +65,7 @@ export function RequestTable({ requests, depts, vendors }: RequestTableProps) {
                   <span className="font-mono text-subtle">#{req.id.toString()}</span>
                 </td>
                 <td className="py-3.5 pr-4">
-                  <span className="font-mono text-muted">{truncateAddress(req.employee)}</span>
+                  <span className="font-mono text-muted">{getEmployeeName(req.employee) !== req.employee ? getEmployeeName(req.employee) : truncateAddress(req.employee)}</span>
                 </td>
                 <td className="py-3.5 pr-4">
                   <span
@@ -85,7 +86,7 @@ export function RequestTable({ requests, depts, vendors }: RequestTableProps) {
                 </td>
                 <td className="py-3.5 pr-4">
                   <span className="text-[12px]" style={{ color: "var(--color-subtle)" }}>
-                    {req.vendorId > 0 ? (vendorNameById.get(req.vendorId) ?? `Vendor #${req.vendorId}`) : "—"}
+                    {req.vendorId > 0 ? getVendorName(req.vendorId, vendorNameById.get(req.vendorId) ?? `Vendor #${req.vendorId}`) : "—"}
                   </span>
                 </td>
                 <td className="py-3.5 pr-4">

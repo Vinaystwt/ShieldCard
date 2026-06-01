@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Shield, Users, Eye } from "lucide-react";
-import { TopBar } from "@/components/shell/TopBar";
+import { AppHeader } from "@/components/shell/AppHeader";
 import { WordMark } from "@/components/brand/WordMark";
 import { RoleBadge } from "@/components/ui/RoleBadge";
 import { WalletButton } from "@/components/wallet/WalletButton";
@@ -57,7 +57,7 @@ export default function AppGatewayPage() {
 
   return (
     <div className="min-h-screen bg-base">
-      <TopBar />
+      <AppHeader />
       <main className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] px-6 py-16">
 
         {/* Unknown wallet — show welcome screen */}

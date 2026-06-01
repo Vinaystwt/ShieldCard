@@ -12,7 +12,7 @@ function getCofheSdk() {
 }
 
 export function useCofhe() {
-  const { client, error, isReady } = useCofheContext();
+  const { client, error, isReady, requestInit } = useCofheContext();
 
   useEffect(() => {
     if (!client) return;
@@ -55,6 +55,7 @@ export function useCofhe() {
     client,
     error,
     isReady,
+    requestInit,
     encryptAmount,
     decryptStatus,
     decryptForPublish,

@@ -8,7 +8,7 @@ import { CheckCircle, XCircle, Loader2, Search, Link2, ShieldCheck, Receipt } fr
 import { createPublicClient, http, encodePacked, keccak256 } from "viem";
 import { arbitrumSepolia } from "viem/chains";
 
-import { TopBar } from "@/components/shell/TopBar";
+import { AppHeader } from "@/components/shell/AppHeader";
 import {
   shieldCardAddress,
   shieldCardAbi,
@@ -199,7 +199,7 @@ export default function VerifyPage() {
 
   return (
     <div className="min-h-screen bg-base">
-      <TopBar />
+      <AppHeader />
       <main className="mx-auto max-w-[920px] px-6 py-10">
         <motion.div
           initial={{ opacity: 0, y: 10 }}

@@ -2,12 +2,12 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Shield, RefreshCw, AlertTriangle, Pause, Play, ClipboardCheck } from "lucide-react";
 import { useChainId } from "wagmi";
 
-import { TopBar } from "@/components/shell/TopBar";
+import { AppHeader } from "@/components/shell/AppHeader";
 import { RequestStream } from "@/components/admin/RequestStream";
 import { EmployeeManagement } from "@/components/admin/EmployeeManagement";
 import { PolicyPackManager } from "@/components/admin/PolicyPackManager";
@@ -44,7 +44,9 @@ export default function AdminPage() {
     summary,
   } = useShieldCard();
 
-  const { decryptForPublish, encryptAmount, error: cofheError, isReady } = useCofhe();
+  const { decryptForPublish, encryptAmount, error: cofheError, isReady, requestInit } = useCofhe();
+  // Trigger CoFHE init — admin page needs encrypt for threshold setting + decrypt for publish
+  useEffect(() => { requestInit(); }, [requestInit]);
   const { isAdmin } = useRoleRouting();
   const chainId = useChainId();
   const isWrongNetwork = chainId !== targetChain.id;
@@ -142,7 +144,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-base">
-      <TopBar />
+      <AppHeader />
       <main className="mx-auto max-w-[1280px] px-6 py-10">
 
         {/* Header */}
