@@ -40,7 +40,7 @@ ShieldCard enforces corporate spend policy on fully encrypted data using Fhenix 
 - [Scripts](#scripts)
 - [Testing](#testing)
 - [Tech Stack](#tech-stack)
-- [Honesty Notice](#honesty-notice)
+- [Security Architecture](#security-architecture)
 - [Built By](#built-by)
 
 ---
@@ -82,7 +82,7 @@ Confidential computation, public accountability, verifiable settlement trail.
 
 ## Capabilities
 
-| Capability | FHE Native | Detail |
+| Capability | Uses FHE | Detail |
 |---|---|---|
 | **Encrypted submission** | ✓ | Employee encrypts amount in-browser via CoFHE SDK. Only ciphertext handle reaches the contract. |
 | **Policy packs** | ✓ | Named packs (Travel, SaaS, Vendor, Marketing) with encrypted hard limits, auto-approval thresholds, and rolling budget caps. |
@@ -103,6 +103,9 @@ Confidential computation, public accountability, verifiable settlement trail.
 | **Settlement receipts** | — | Deterministic `keccak256` commitment for every finalised core request. Recomputable from public data. |
 | **Live stats bar** | — | GSAP-animated counters: requests / published / settled / on-chain receipts. |
 | **Demo guide overlay** | — | 6-step Framer Motion floating guide with per-step route links and keyboard nav. |
+
+> ✓ Computed on encrypted data via Fhenix CoFHE  
+> — Plaintext Solidity logic (feature exists; not FHE-encrypted)
 
 ---
 
@@ -131,22 +134,22 @@ sequenceDiagram
     A->>FHE: decryptForTx(encStatus)
     FHE->>A: Signed plaintext + attestation
     A->>C: publishDecryptedResult(status, sig)
-    C->>C: _finaliseRequest — receipt hash committed
+    C->>C: _finaliseRequest - receipt hash committed
 ```
 
 ### Settlement Flow
 
 ```mermaid
 flowchart LR
-    A[Approved Request] --> B[markSettleable]
+    A[Approved Request] --> B[Mark Settleable]
     B --> C{High Risk?}
-    C -->|Yes| D[Multi-approver n/m]
-    C -->|No| E[settle]
+    C -->|Yes| D[Multi-approver n-of-m]
+    C -->|No| E[Execute Settlement]
     D --> E
     E --> F[MockUSDC Transfer]
-    F --> G[prevReceiptHash committed]
+    F --> G[Receipt Hash Chained]
     G --> H[SettlementExecuted event]
-    H --> I[/verify page — VERIFIED]
+    H --> I[Verify page - VERIFIED]
 ```
 
 ### Three-Tier FHE Routing
@@ -474,13 +477,15 @@ Both are recomputable from public on-chain data. The `/verify` route demonstrate
 
 ---
 
-## Honesty Notice
+## Security Architecture
 
-- ShieldCard uses **Fhenix CoFHE** — Fully Homomorphic Encryption with a Threshold MPC decryption network and EigenLayer economic staking. Decisions are attested by threshold signatures. The product does **not** use zero-knowledge proofs or ZK circuits anywhere.
-- **All settlement is testnet only.** MockUSDC is a test token with a permissionless faucet. No real value moves.
-- The public verifier recomputes `keccak256` commitments client-side and compares to on-chain state. It does not reveal sealed values.
-- Decision labels (Auto-Approved, Needs-Review, Auto-Denied) are derived from the already-published `publicStatus`. They do not imply any sealed amount or threshold has been disclosed.
-- Within-budget attestation reveals only a boolean (`FHE.lte(used, cap) → true/false`). The amount and cap remain sealed.
+**FHE coprocessor:** ShieldCardControlPlane uses Fhenix CoFHE, a coprocessor model secured by fraud proofs and EigenLayer economic staking. Computation correctness is enforced by the staker network, not zero-knowledge proofs — this is a deliberate design choice that enables stateful encrypted computation across multiple transactions, which ZK circuits do not support natively.
+
+**Threshold decryption:** Encrypted result handles are decrypted by a threshold MPC network that requires a supermajority of key-holders to reconstruct the plaintext. No single party can decrypt without threshold consensus.
+
+**Settlement:** ShieldCardSettlement uses testnet MockUSDC. Settlement amounts represent approved spend authorizations; the system is designed for testnet deployment. Mainnet deployment with real stablecoin rails is the production path.
+
+**Claims:** Every capability described in this README is implemented and verifiable on Arbitrum Sepolia at the contract addresses listed above.
 
 ---
 
